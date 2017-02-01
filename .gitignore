@@ -26,3 +26,5 @@ vignettes/*.pdf
 .Rproj.user
 out.txt
 tornadoesr.Rproj
+*.DS_Store
+*.swp
