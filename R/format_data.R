@@ -16,24 +16,31 @@ tor_df <- df
 tor_df <- filter(tor_df, EVENT_TYPE == "Tornado")
 
 
+# I left the gsub conversions lengthy because when I tried your way, it,
+# for some reason, really messed up property damage, and I'm leaving very soon.
+# Wanted to go ahead and get this up there. Might revisit.
 # Converting the money from, for example, 2M to 2000000 for crops: -------------
 
 
-tor_df <- tor_df %>%
-  mutate(DAMAGE_PROPERTY = gsub("M", "000000", DAMAGE_CROPS), 
-         DAMAGE_PROPERTY = gsub("K", "000", DAMAGE_CROPS), 
-         DAMAGE_PROPERTY = gsub("\\.", "", DAMAGE_CROPS), 
-         DAMAGE_PROPERTY = as.numeric(DAMAGE_CROPS))
+tor_df$DAMAGE_CROPS <- gsub("M", "000000", tor_df$DAMAGE_CROPS)
+
+tor_df$DAMAGE_CROPS <- gsub("K", "000", tor_df$DAMAGE_CROPS)
+
+tor_df$DAMAGE_CROPS <- gsub("\\.", "", tor_df$DAMAGE_CROPS)
+
+tor_df$DAMAGE_CROPS <- as.numeric(tor_df$DAMAGE_CROPS)
 
 
 # Converting the money from, for example, 2M to 2000000 for property: ----------
 
 
-tor_df <- tor_df %>%
-  mutate(DAMAGE_PROPERTY = gsub("M", "000000", DAMAGE_PROPERTY), 
-         DAMAGE_PROPERTY = gsub("K", "000", DAMAGE_PROPERTY), 
-         DAMAGE_PROPERTY = gsub("\\.", "", DAMAGE_PROPERTY), 
-         DAMAGE_PROPERTY = as.numeric(DAMAGE_PROPERTY))
+tor_df$DAMAGE_PROPERTY <- gsub("M", "000000", tor_df$DAMAGE_PROPERTY)
+
+tor_df$DAMAGE_PROPERTY <- gsub("K", "000", tor_df$DAMAGE_PROPERTY)
+
+tor_df$DAMAGE_PROPERTY <- gsub("\\.", "", tor_df$DAMAGE_PROPERTY)
+
+tor_df$DAMAGE_PROPERTY <- as.numeric(tor_df$DAMAGE_PROPERTY)
 
 
 # Filtering the data to appromixately the continental United States ------------
