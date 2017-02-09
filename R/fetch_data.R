@@ -9,7 +9,7 @@ lines <- readLines("out.txt")
 storm_detail_indices <- grep("StormEvents_details", lines)
 storm_lines <- lines[storm_detail_indices]
 
-filename_start_index <- unlist(gregexpr("StormEvents", storm_lines))
+filename_start_index <- unlist(gregexpr("/StormEvents", storm_lines))
 
 all_same_index <- length(unique(filename_start_index)) == 1
 if (!all_same_index) {
@@ -17,7 +17,7 @@ if (!all_same_index) {
 }
 
 filenames <- substring(storm_lines, unique(filename_start_index))
-
+filenames <- substring(filenames, 2, 52)
 
 # Generate full paths to the data files -----------------------------------
 full_paths <- paste0(ftp_prefix, filenames)
