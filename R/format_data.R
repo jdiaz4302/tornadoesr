@@ -1,44 +1,43 @@
-# Import the data --------------------------------------------------------------
 
 
-tor_df <- source("R/merge_data.R")
+
+# Import the data
+source("R/merge_data.R")
 
 
-# Better name ------------------------------------------------------------------
+# Only tornadoes
+tor_df <- filter(tor_df,
+                 EVENT_TYPE == "Tornado")
 
 
-tor_df <- df
+# Converting the money from, for example, 2M to 2000000 for crops
+tor_df$DAMAGE_CROPS <- gsub("M",
+                            "000000",
+                            tor_df$DAMAGE_CROPS)
 
+tor_df$DAMAGE_CROPS <- gsub("K",
+                            "000",
+                            tor_df$DAMAGE_CROPS)
 
-# Only tornadoes ---------------------------------------------------------------
-
-
-tor_df <- filter(tor_df, EVENT_TYPE == "Tornado")
-
-
-# I left the gsub conversions lengthy because when I tried your way, it,
-# for some reason, really messed up property damage, and I'm leaving very soon.
-# Wanted to go ahead and get this up there. Might revisit.
-# Converting the money from, for example, 2M to 2000000 for crops: -------------
-
-
-tor_df$DAMAGE_CROPS <- gsub("M", "000000", tor_df$DAMAGE_CROPS)
-
-tor_df$DAMAGE_CROPS <- gsub("K", "000", tor_df$DAMAGE_CROPS)
-
-tor_df$DAMAGE_CROPS <- gsub("\\.", "", tor_df$DAMAGE_CROPS)
+tor_df$DAMAGE_CROPS <- gsub("\\.",
+                            "",
+                            tor_df$DAMAGE_CROPS)
 
 tor_df$DAMAGE_CROPS <- as.numeric(tor_df$DAMAGE_CROPS)
 
 
-# Converting the money from, for example, 2M to 2000000 for property: ----------
+# Converting the money from, for example, 2M to 2000000 for property
+tor_df$DAMAGE_PROPERTY <- gsub("M",
+                               "000000",
+                               tor_df$DAMAGE_PROPERTY)
 
+tor_df$DAMAGE_PROPERTY <- gsub("K",
+                               "000",
+                               tor_df$DAMAGE_PROPERTY)
 
-tor_df$DAMAGE_PROPERTY <- gsub("M", "000000", tor_df$DAMAGE_PROPERTY)
-
-tor_df$DAMAGE_PROPERTY <- gsub("K", "000", tor_df$DAMAGE_PROPERTY)
-
-tor_df$DAMAGE_PROPERTY <- gsub("\\.", "", tor_df$DAMAGE_PROPERTY)
+tor_df$DAMAGE_PROPERTY <- gsub("\\.",
+                               "",
+                               tor_df$DAMAGE_PROPERTY)
 
 tor_df$DAMAGE_PROPERTY <- as.numeric(tor_df$DAMAGE_PROPERTY)
 
@@ -140,6 +139,7 @@ tor_df <- select(tor_df, c(INJURIES_DIRECT, DEATHS_DIRECT,
                            DURATION_SECONDS, BEGIN_TIME_OF_YEAR,
                            BEGIN_MONTH_DAY, BEGIN_LAT,
                            BEGIN_LON, TOR_LENGTH, TOR_WIDTH,
-                           YEAR, MONTH, BEGIN_TIME))
+                           YEAR, MONTH, BEGIN_TIME,
+                           BEGIN_DATE_TIME))
 
 
