@@ -5,10 +5,6 @@
 source("R/merge_data.R")
 
 
-# Packages
-library(dplyr)
-
-
 # Filter to only tornadoes
 tor_df <- filter(tor_df,
                  EVENT_TYPE == "Tornado")
