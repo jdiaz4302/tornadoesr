@@ -1,0 +1,65 @@
+
+
+
+# Packages
+library(plyr)
+library(ggplot2)
+
+
+# Calling the data
+source("R/format_for_python.R")
+
+
+# Get property damage per year
+DamPerYear <- aggregate(tor_df$DAMAGE_PROPERTY,
+                        by = list(Category = tor_df$YEAR),
+                        FUN = sum)
+
+# Don't include 2017 since it's not complete
+DPY <- filter(DamPerYear,
+              Category != 2017)
+
+DPY$Damage <- DPY$x
+
+
+# Plot it
+ggplot(DPY,
+       aes(x = Category,
+           y = log(Damage))) +
+  geom_line(lwd = 1.75,
+            colour = "grey75") + 
+  scale_y_continuous(limits = c(0,
+                                25)) +
+  scale_x_continuous(breaks = 1997:2016) +
+  geom_hline(aes(yintercept = 17),
+             lty = 2,
+             lwd = 1.5,
+             colour = "red4") +
+  geom_hline(aes(yintercept = 23),
+             lty = 2,
+             lwd = 1.5,
+             colour = "red4") +
+  geom_point(size = 5.25,
+             colour = "navy") +
+  geom_text(aes(2001,
+                23,
+                label = "Over $9,700,000,000.00",
+                vjust = -.75),
+                size = 5) +
+  geom_text(aes(2014,
+                17,
+                label = "Over $24,000,000.00",
+                vjust = -.75),
+                size = 5) +
+  xlab("Year") +
+  ylab("Log-Transformed Property Damage (US dollars)") +
+  ggtitle("Tornado-Induced Property Damage per Year") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5,
+                                  size = 22),
+        axis.title = element_text(size = 17),
+        legend.position = "none",
+        axis.text = element_text(size = 15),
+        aspect.ratio = 8/11)
+ 
+

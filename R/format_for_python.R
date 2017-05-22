@@ -1,10 +1,6 @@
 
 
 
-# Packages
-library(reshape2)
-
-
 # Calling the data
 source("R/merge_data.R")
 
@@ -79,7 +75,8 @@ tor_df <- dplyr::select(tor_df, c(INJURIES_DIRECT,
                                   TOR_LENGTH,
                                   TOR_WIDTH,
                                   BEGIN_DATE_TIME,
-                                  EVENT_ID))
+                                  EVENT_ID,
+                                  YEAR))                     # For plot
 
 
 # PyTorch really doesn't like NA values
@@ -231,7 +228,8 @@ tor_df <- dplyr::select(tor_df, c(INJURIES_DIRECT,
                                   TOR_LENGTH,
                                   TOR_WIDTH,
                                   BEGIN_DATE_TIME,
-                                  EVENT_ID))
+                                  EVENT_ID,
+                                  YEAR))              # For plot
 
 # The nonsequential indices are undesirable (to me)
 rownames(tor_df) <- NULL
