@@ -131,6 +131,63 @@ tor_df$DAMAGE_CROPS_temp <- gsub("B",
 tor_df$DAMAGE_CROPS_temp <- as.numeric(tor_df$DAMAGE_CROPS_temp)
 
 
+# try again
+tor_df$DAMAGE_PROPERTY_temp <- sprintf("%10.2f",
+                                       tor_df$DAMAGE_PROPERTY_temp)
+
+
+
+
+
+
+
+tor_df$testing <- gsub("K",
+                       "0",
+                       gsub("\\.",
+                            "",
+                            tor_df$DAMAGE_PROPERTY_temp))
+
+
+tor_df$testing <- gsub("M",
+                       "0000",
+                       gsub("\\.",
+                            "",
+                            tor_df$testing))
+
+
+tor_df$testing <- gsub("B",
+                       "0000000",
+                       gsub("\\.",
+                            "",
+                            tor_df$testing))
+
+data1 <- select(tor_df,
+                c(DAMAGE_PROPERTY,
+                  testing))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Function to determine how many decimal places
 decimalplaces <- function(x) {
   if ((x %% 1) != 0) {
@@ -167,7 +224,9 @@ tor_df <- select(tor_df, -value)
 tor_df$testing <- ifelse(tor_df$DAMAGE_PROPERTY_dec_places == 0,
                          tor_df$TeStInG <- gsub("K",
                                                 "000",
-                                                tor_df$DAMAGE_PROPERTY),
+                                                gsub("\\.",
+                                                     "",
+                                                     tor_df$DAMAGE_PROPERTY)),
                          ifelse(tor_df$DAMAGE_PROPERTY_dec_places == 1,
                                 tor_df$TeStInG <- gsub("K",
                                                        "00",
@@ -187,7 +246,9 @@ tor_df$testing <- ifelse(tor_df$DAMAGE_PROPERTY_dec_places == 0,
 tor_df$testing <- ifelse(tor_df$DAMAGE_PROPERTY_dec_places == 0,
                          tor_df$TeStInG <- gsub("M",
                                                 "000000",
-                                                tor_df$testing),
+                                                gsub("\\.",
+                                                     "",
+                                                     tor_df$testing)),
                          ifelse(tor_df$DAMAGE_PROPERTY_dec_places == 1,
                                 tor_df$TeStInG <- gsub("M",
                                                        "00000",
@@ -207,7 +268,9 @@ tor_df$testing <- ifelse(tor_df$DAMAGE_PROPERTY_dec_places == 0,
 tor_df$testing <- ifelse(tor_df$DAMAGE_PROPERTY_dec_places == 0,
                          tor_df$TeStInG <- gsub("B",
                                                 "000000000",
-                                                tor_df$testing),
+                                                gsub("\\.",
+                                                     "",
+                                                     tor_df$testing)),
                          ifelse(tor_df$DAMAGE_PROPERTY_dec_places == 1,
                                 tor_df$TeStInG <- gsub("B",
                                                        "00000000",
@@ -221,5 +284,11 @@ tor_df$testing <- ifelse(tor_df$DAMAGE_PROPERTY_dec_places == 0,
                                                                    "",
                                                                    tor_df$testing)),
                                        NA)))
+
+
+# Seeing how they line up
+data1 <- select(tor_df,
+                c(DAMAGE_PROPERTY,
+                  testing))
 
 
