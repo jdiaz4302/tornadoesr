@@ -136,9 +136,26 @@ tor_df$DAMAGE_PROPERTY_temp <- sprintf("%10.2f",
                                        tor_df$DAMAGE_PROPERTY_temp)
 
 
+# GIVES TRUE OR FALSE, IF 1ST ARGUMENT IS INCLUDED
+tor_df$K_EXIST <- grepl("K",
+                        tor_df$DAMAGE_PROPERTY)
+
+tor_df$M_EXIST <- grepl("M",
+                        tor_df$DAMAGE_PROPERTY)
+
+tor_df$B_EXIST <- grepl("B",
+                        tor_df$DAMAGE_PROPERTY)
 
 
+####################################################################
+####################################################################
+####################################################################
 
+### THE ABOVE IS WHAT IS GOING GOOD ################################
+### EVERYTHING GOES TO 2 DECIMAL PLACES ############################
+### THERE IS A COLUMN INDICATING IF A LETTER IS PRESENT ############
+### MAKE CODE ACT ACCORDINGLY AND WE'RE GOOD #######################
+####################################################################
 
 
 tor_df$testing <- gsub("K",
@@ -167,20 +184,8 @@ data1 <- select(tor_df,
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#######################################################
+#######################################################
 
 
 
