@@ -76,7 +76,8 @@ tor_df <- dplyr::select(tor_df, c(INJURIES_DIRECT,
                                   TOR_WIDTH,
                                   BEGIN_DATE_TIME,
                                   EVENT_ID,
-                                  YEAR))                     # For plot
+                                  YEAR,                  # For why_care_plot
+                                  CZ_NAME))                     # For income/social stuff
 
 
 # PyTorch really doesn't like NA values
@@ -229,7 +230,8 @@ tor_df <- dplyr::select(tor_df, c(INJURIES_DIRECT,
                                   TOR_WIDTH,
                                   BEGIN_DATE_TIME,
                                   EVENT_ID,
-                                  YEAR))              # For plot
+                                  YEAR,                  # For why_care_plot
+                                  CZ_NAME))              # For income/social stuff
 
 # The nonsequential indices are undesirable (to me)
 rownames(tor_df) <- NULL
