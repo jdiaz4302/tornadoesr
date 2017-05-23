@@ -77,7 +77,45 @@ tor_LC_df <- merge(x = tor_df,
 tor_LC_df[is.na(tor_LC_df)] <- 0
 
 
-# Then save the dataframe as .csv
-# But I'm not going to put that here just in case
+# "0" isn't actually a LC value, so we'll remove that error
+tor_LC_df <- dplyr::select(tor_LC_df,
+                           -c(percent.0))
 
+
+# Give the LC values a name
+colnames(tor_LC_df)[colnames(tor_LC_df) == "percent.11"] <- "OPEN_WATER_PROP"
+
+colnames(tor_LC_df)[colnames(tor_LC_df) == "percent.21"] <- "DEV_OPEN_PROP"
+
+colnames(tor_LC_df)[colnames(tor_LC_df) == "percent.22"] <- "DEV_LOW_PROP"
+
+colnames(tor_LC_df)[colnames(tor_LC_df) == "percent.23"] <- "DEV_MED_PROP"
+
+colnames(tor_LC_df)[colnames(tor_LC_df) == "percent.24"] <- "DEV_HIGH_PROP"
+
+colnames(tor_LC_df)[colnames(tor_LC_df) == "percent.41"] <- "DECID_FOREST_PROP"
+
+colnames(tor_LC_df)[colnames(tor_LC_df) == "percent.42"] <- "EVERGR_FOREST_PROP"
+
+colnames(tor_LC_df)[colnames(tor_LC_df) == "percent.43"] <- "MIXED_FOREST_PROP"
+
+colnames(tor_LC_df)[colnames(tor_LC_df) == "percent.52"] <- "SHRUB_SCRUB_PROP"
+
+colnames(tor_LC_df)[colnames(tor_LC_df) == "percent.71"] <- "GRASS_LAND_PROP"
+
+colnames(tor_LC_df)[colnames(tor_LC_df) == "percent.81"] <- "PASTURE_HAY_PROP"
+
+colnames(tor_LC_df)[colnames(tor_LC_df) == "percent.82"] <- "CULT_CROPS_PROP"
+
+colnames(tor_LC_df)[colnames(tor_LC_df) == "percent.90"] <- "WOOD_WETLAND_PROP"
+
+colnames(tor_LC_df)[colnames(tor_LC_df) == "percent.95"] <- "HERB_WETLAND_PROP"
+
+colnames(tor_LC_df)[colnames(tor_LC_df) == "percent.31"] <- "BARREN_LAND_PROP"
+
+colnames(tor_LC_df)[colnames(tor_LC_df) == "percent.12"] <- "ICE_SNOW_PROP"
+
+
+# Then save the dataframe as .csv
+# write_csv(tor_LC_df, "data/raw/Tor_data_with_LC.csv")
 
