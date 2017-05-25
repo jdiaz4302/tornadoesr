@@ -2,7 +2,7 @@
 
 
 # Calling the data
-source("R/merge_data.R")
+source("R/2_merge_data.R")
 
 
 # Filter to only tornadoes
