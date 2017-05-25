@@ -33,17 +33,22 @@ Sys.time()
 
 tor_events_LC <- raster::extract(NLCD,
                                  tor_Spatial,
-                                 buffer = 3500)
+                                 buffer = 2100)
 
 Sys.time()
 
 
 # Get the LC proportions, rather than list of all values
+# and time it
+Sys.time()
+
 LC_prop <- lapply(tor_events_LC,
                   function(x){
                     prop.table(table(x))
                     }
                   )
+
+Sys.time()
 
 
 # Arrange the proportions into a data.frame, rather than nested list

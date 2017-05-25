@@ -9,6 +9,11 @@ library(readr)
 tor_LC_df <- read.csv("data/raw/Tor_data_with_LC_norm.csv")
 
 
+# Shuffle it, for safety
+tor_LC_df <- tor_LC_df[sample(nrow(tor_LC_df)),
+                       ]
+
+
 # Set split percentages
 fractionTraining <- 0.60
 
