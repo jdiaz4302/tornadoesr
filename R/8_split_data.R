@@ -6,7 +6,7 @@ library(readr)
 
 
 # Import dataset to split
-tor_LC_df <- read.csv("data/raw/Tor_data_with_LC_norm.csv")
+tor_LC_df <- read.csv("data/raw/Tor_data_with_LC_processed.csv")
 
 
 # Shuffle it, for safety
