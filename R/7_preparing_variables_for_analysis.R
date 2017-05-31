@@ -127,7 +127,8 @@ tor_LC_df <- dplyr::select(tor_LC_df,
 tor_hist_data <- melt(tor_LC_df)
 
 tor_hist_data <- dplyr::select(tor_hist_data,
-                               -CZ_NAME)
+                               -c(CZ_NAME,
+                                  STATE))
 
 tor_hist_data <- dplyr::filter(tor_hist_data,
                                variable != "EVENT_ID")
