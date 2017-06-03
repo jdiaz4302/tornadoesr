@@ -13,6 +13,8 @@ tor_LC_df <- read.csv("data/raw/Tor_data_with_LC_processed.csv")
 tor_LC_df <- tor_LC_df[sample(nrow(tor_LC_df)),
                        ]
 
+rownames(tor_LC_df) <- NULL
+
 
 # Set split percentages
 fractionTraining <- 0.60
@@ -51,19 +53,23 @@ indicesTest <- setdiff(indicesNotTraining,
 
 
 # Subset the data
-tor_test_set <- tor_LC_df[indicesTest,
-                          ]                            # Keep all columns
+test_set <- tor_LC_df[indicesTest,
+                      ]                            # Keep all columns
 
-tor_validation_set <- tor_LC_df[indicesValidation,
-                                ]
+cv_set <- tor_LC_df[indicesValidation,
+                    ]
 
-tor_training_set <- tor_LC_df[indicesTraining,
-                              ]
+train_set <- tor_LC_df[indicesTraining,
+                       ]
+
+# Run this until the data sets have very similar means
+# and distributions
+# Easily done with R/17_...
 
 
 # Save them
-# write_csv(tor_test_set, "data/raw/tor_test_set.csv")
-# write_csv(tor_validation_set, "data/raw/tor_cv_set.csv")
-# write_csv(tor_training_set, "data/raw/tor_train_set.csv")
+# write_csv(test_set, "data/raw/tor_test_set.csv")
+# write_csv(cv_set, "data/raw/tor_cv_set.csv")
+# write_csv(train_set, "data/raw/tor_train_set.csv")
 
 

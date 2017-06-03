@@ -21,6 +21,8 @@ mean(train_set$DAMAGE_PROPERTY)
 mean(cv_set$DAMAGE_PROPERTY)
 # result: -0.0162
 
+mean(test_set$DAMAGE_PROPERTY)
+
 
 # Welp, the means on the non-training data are
 # Lower than the training data - not by much though
@@ -34,6 +36,10 @@ hist(train_set$DAMAGE_PROPERTY,
      xlim = c(-2, 2))
 
 hist(cv_set$DAMAGE_PROPERTY,
+     breaks = 50,
+     xlim = c(-2, 2))
+
+hist(test_set$DAMAGE_PROPERTY,
      breaks = 50,
      xlim = c(-2, 2))
 
