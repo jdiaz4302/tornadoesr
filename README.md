@@ -13,4 +13,4 @@ Variables of interest were then passed over to python, where I sought to develop
 
 ## Best Model So Far
 
-![alt text](https://raw.githubusercontent.com/jdiaz4302/tornadoesr/images/best_model_june_4_2017.png)
+![](https://raw.githubusercontent.com/jdiaz4302/tornadoesr/master/images/best_model_june_4_2017.png)
