@@ -125,7 +125,21 @@ test_set <- na.omit(test_set)
 
 
 # Process the data for the modelling
-# Function for processing
+# Functions for processing
+mean_normalize <- function(to_normalize){
+  
+  # descr:  simple mean normalization... (x - mean(x))/sd(x)
+  # arg:    thing to normalize
+  # return: that thing normalized
+  
+  numerator <- to_normalize - mean(to_normalize)
+  
+  normalized <- numerator / sd(to_normalize)
+  
+  return(normalized)
+  
+}
+
 mean_norm_log_xform <- function(to_process) {
   
   # descr:  log transform (base e) then mean normalize
