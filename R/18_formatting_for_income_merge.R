@@ -110,6 +110,20 @@ test_set <- dplyr::select(test_set,
                           -state_abbrev)
 
 
+# Remove NA'd values
+train_no_0 <- na.omit(train_no_0)
+
+train_set <- na.omit(train_set)
+
+cv_no_0 <- na.omit(cv_no_0)
+
+cv_set <- na.omit(cv_set)
+
+test_no_0 <- na.omit(test_no_0)
+
+test_set <- na.omit(test_set)
+
+
 # Save them
 # write_csv(train_no_0, "data/raw/train_with_econ_wout_zeros.csv")
 # write_csv(train_set, "data/raw/train_with_econ_with_zeros.csv")
