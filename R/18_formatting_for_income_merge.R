@@ -124,6 +124,38 @@ test_no_0 <- na.omit(test_no_0)
 test_set <- na.omit(test_set)
 
 
+# Process the data for the modelling
+# Function for processing
+mean_norm_log_xform <- function(to_process) {
+  
+  # descr:  log transform (base e) then mean normalize
+  # arg:    thing to process
+  # return: that thing processed
+  
+  log_xformed <- log(to_process + 1,
+                     base = exp(1))
+  
+  mean_norm_log_xformed_variable <- mean_normalize(log_xformed)
+  
+  return(mean_norm_log_xformed_variable)
+  
+}
+
+
+# Processing
+train_no_0$INCOME <- mean_norm_log_xform(train_no_0$INCOME)
+
+train_set$INCOME <- mean_norm_log_xform(train_set$INCOME)
+
+cv_no_0$INCOME <- mean_norm_log_xform(cv_no_0$INCOME)
+
+cv_set$INCOME <- mean_norm_log_xform(cv_set$INCOME)
+
+test_no_0$INCOME <- mean_norm_log_xform(test_no_0$INCOME)
+
+test_set$INCOME <- mean_norm_log_xform(test_set$INCOME)
+
+
 # Save them
 # write_csv(train_no_0, "data/raw/train_with_econ_wout_zeros.csv")
 # write_csv(train_set, "data/raw/train_with_econ_with_zeros.csv")
