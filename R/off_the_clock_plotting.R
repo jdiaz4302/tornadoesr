@@ -9,6 +9,11 @@ library(ggplot2)
 source("R/3_format_for_python.R")
 
 
+# Get rid of 2017 since its an incomplete year
+tor_df <- dplyr::filter(tor_df,
+                        YEAR != 2017)
+
+
 # Get property damage per year
 DamPerState <- aggregate(tor_df$DAMAGE_PROPERTY,
                          by = list(Category = tor_df$STATE),
@@ -26,11 +31,11 @@ DamPerState$Category <- as.factor(DamPerState$Category)
 
 # Get the value for the state with the 10th most
 # tornado-induced property damage
-top_10_states <- sort(DamPerState$x, decreasing = TRUE)[10]
+top_10_states_cutoff <- sort(DamPerState$x, decreasing = TRUE)[10]
 
 # Keep only the top 10 states
 DamPerState <- filter(DamPerState,
-                      x >= top_10_states)
+                      x >= top_10_states_cutoff)
 
 # Get those state names
 state_names <- DamPerState$Category
@@ -117,8 +122,6 @@ ggplot(tor_top_10_df,
            y = DAMAGE_PROPERTY,
            col = STATE)) +
   theme_bw() +
-  geom_point(size = 3,
-             alpha = .4) +
   geom_jitter(width = 0.10,
               height = 0.10,
               size = 3,
@@ -135,8 +138,6 @@ ggplot(tor_top_10_df,
         axis.text = element_text(size = 14),
         legend.position = "none",
         aspect.ratio = 7/13)
-
-
 
 
 # Get the average per year per state
@@ -264,15 +265,21 @@ avg_by_state_by_year$x <- log(avg_by_state_by_year$x + 1,
                               base = exp(1))
 
 
+# Better looking variable name for the plot
+avg_by_state_by_year$STATE <- avg_by_state_by_year$state
+
+
 # Plot it
 ggplot(avg_by_state_by_year,
        aes(x = Category,
            y = x,
-           group = state,
-           col = state)) +
-  geom_line(size = 1.25,
-            alpha = 0.3) +
-  geom_point(size = 3) +
+           group = STATE,
+           col = STATE)) +
+  geom_line(size = 1.15,
+            alpha = 0.8) +
+  geom_jitter(width = 0.05,
+              height = 0.05,
+              size = 5) +
   theme_bw() +
   labs(x = "Year",
        y = "Log-Transformed Property Damage (US dollars)",
@@ -284,5 +291,164 @@ ggplot(avg_by_state_by_year,
         axis.text = element_text(size = 14),
         aspect.ratio = 8/11) + 
   scale_color_brewer(palette = "Paired")
+
+
+# For each year selection
+#tor_top_10_df_00 <- dplyr::filter(tor_top_10_df,
+#                                  YEAR == 2000)
+#
+#tor_top_10_df_05 <- dplyr::filter(tor_top_10_df,
+#                                  YEAR == 2005)
+#
+#tor_top_10_df_10 <- dplyr::filter(tor_top_10_df,
+#                                  YEAR == 2010)
+#
+#tor_top_10_df_15 <- dplyr::filter(tor_top_10_df,
+#                                  YEAR == 2015)
+#
+#
+# 2000
+# Get an anova model
+#anova_model_00 <- lm(DAMAGE_PROPERTY ~ 0 + STATE,
+#                     data = tor_top_10_df_00)
+#
+#
+# Get the 95% confidence intervals on the mean as a dataframe
+#confint_d_00 <- as.data.frame(confint(anova_model_00))
+#
+#
+# Assign the dataframe proper STATE variable
+#confint_d_00$STATE <- levels(factor(tor_top_10_df_00$STATE))
+#
+#
+# 2005
+# Get an anova model
+#anova_model_05 <- lm(DAMAGE_PROPERTY ~ 0 + STATE,
+#                     data = tor_top_10_df_05)
+#
+#
+# Get the 95% confidence intervals on the mean as a dataframe
+#confint_d_05 <- as.data.frame(confint(anova_model_05))
+#
+#
+# Assign the dataframe proper STATE variable
+#confint_d_05$STATE <- levels(factor(tor_top_10_df_05$STATE))
+#
+#
+# 2010
+# Get an anova model
+#anova_model_10 <- lm(DAMAGE_PROPERTY ~ 0 + STATE,
+#                     data = tor_top_10_df_10)
+#
+#
+# Get the 95% confidence intervals on the mean as a dataframe
+#confint_d_10 <- as.data.frame(confint(anova_model_10))
+#
+#
+# Assign the dataframe proper STATE variable
+#confint_d_10$STATE <- levels(factor(tor_top_10_df_10$STATE))
+#
+#
+# 2015
+# Get an anova model
+#anova_model_15 <- lm(DAMAGE_PROPERTY ~ 0 + STATE,
+#                     data = tor_top_10_df_15)
+#
+#
+# Get the 95% confidence intervals on the mean as a dataframe
+#confint_d_15 <- as.data.frame(confint(anova_model_15))
+#
+#
+# Assign the dataframe proper STATE variable
+#confint_d_15$STATE <- levels(factor(tor_top_10_df_15$STATE))
+#
+#  
+#
+#
+#ggplot(tor_top_10_df,
+#       aes(x = STATE,
+#           y = DAMAGE_PROPERTY)) +
+#  theme_bw() +
+#  geom_jitter(width = 0.10,
+#              height = 0.10,
+#              size = 3,
+#              alpha = .4) +
+#  geom_segment(aes(xend = STATE, y = `2.5 %`, yend = `97.5 %`), 
+#               color = 'dark red', data = confint_d_00, size = 7,
+#               alpha = 0.55) +
+#  geom_segment(aes(xend = STATE, y = `2.5 %`, yend = `97.5 %`), 
+#               color = 'orange', data = confint_d_05, size = 6,
+#               alpha = 0.55) +
+#  geom_segment(aes(xend = STATE, y = `2.5 %`, yend = `97.5 %`), 
+#               color = 'green', data = confint_d_10, size = 5,
+#               alpha = 0.55) +
+#  geom_segment(aes(xend = STATE, y = `2.5 %`, yend = `97.5 %`), 
+#               color = 'dark blue', data = confint_d_15, size = 4,
+#               alpha = 0.55) +
+#  labs(x = "State",
+#       y = "Log-Transformed Property Damage (US dollars)",
+#       title = "Tornado-Induced Property Damage",
+#       subtitle = "Per Event in the Top 10 Most Damaged States") +
+#  theme(plot.title = element_text(hjust = 0.5, size = 24),
+#        plot.subtitle = element_text(hjust = 0.5, size = 15),
+#        axis.title = element_text(size = 17),
+#        axis.text = element_text(size = 14),
+#        legend.position = "none",
+#        aspect.ratio = 7/13) +
+#  coord_cartesian(ylim = c(0, 20))
+
+
+# Let's make a gif
+dam_by_event_per_year <- ggplot(tor_top_10_df,
+                                aes(x = STATE,
+                                    y = DAMAGE_PROPERTY,
+                                    col = STATE,
+                                    frame = YEAR)) +
+  theme_bw() +
+  geom_jitter(width = 0.10,
+              height = 0.10,
+              size = 6,
+              alpha = 0.55) +
+  labs(x = "State",
+       y = "Log-Transformed Property Damage (US dollars)",
+       title = "Tornado-Induced Property Damage",
+       subtitle = "Per Event in the Top 10 Most Damaged States") +
+  theme(plot.title = element_text(hjust = 0.5, size = 27),
+        plot.subtitle = element_text(hjust = 0.5, size = 18),
+        axis.title = element_text(size = 20),
+        axis.text = element_text(size = 18),
+        legend.position = "none",
+        aspect.ratio = 12/27)
+
+
+# Animate the gif
+gganimate::gganimate(dam_by_event_per_year,
+                     ani.width = 1536,
+                     ani.height = 800,
+                     "tor_events_each_year.gif")
+
+
+# Lets make another gif
+another_gif <- ggplot(tor_df,
+                      aes(x = as.Date(as.POSIXct(BEGIN_DATE_TIME,
+                                                 origin = "1970-01-01")),
+                          y = log(DAMAGE_PROPERTY + 1,
+                                  base = exp(1)),
+                          frame = STATE,
+                          col = log(DAMAGE_PROPERTY + 1,
+                                    base = exp(1)))) +
+  theme_bw() +
+  geom_jitter(width = 0.10,
+              height = 0.10,
+              size = 6,
+              alpha = 0.55) +
+  scale_colour_gradientn(colours = rainbow(10))
+
+
+# Animate the gif
+gganimate::gganimate(another_gif,
+                     ani.width = 1536,
+                     ani.height = 800)
+
 
 
