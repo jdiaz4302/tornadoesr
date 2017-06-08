@@ -3,6 +3,8 @@
 
 # Packages
 library(ggplot2)
+library(gganimate)
+library(ggmap)
 
 
 # Call the data
@@ -137,7 +139,7 @@ ggplot(tor_top_10_df,
         axis.title = element_text(size = 17),
         axis.text = element_text(size = 14),
         legend.position = "none",
-        aspect.ratio = 7/13)
+        aspect.ratio = 15/27)
 
 
 # Get the average per year per state
@@ -411,44 +413,80 @@ dam_by_event_per_year <- ggplot(tor_top_10_df,
               alpha = 0.55) +
   labs(x = "State",
        y = "Log-Transformed Property Damage (US dollars)",
-       title = "Tornado-Induced Property Damage",
+       title = "Tornado-Induced Property Damage by Event in:",
        subtitle = "Per Event in the Top 10 Most Damaged States") +
   theme(plot.title = element_text(hjust = 0.5, size = 27),
         plot.subtitle = element_text(hjust = 0.5, size = 18),
         axis.title = element_text(size = 20),
         axis.text = element_text(size = 18),
         legend.position = "none",
-        aspect.ratio = 12/27)
+        aspect.ratio = 15/27)
 
 
 # Animate the gif
 gganimate::gganimate(dam_by_event_per_year,
-                     ani.width = 1536,
-                     ani.height = 800,
-                     "tor_events_each_year.gif")
+                     ani.width = 1688,
+                     ani.height = 1100)
+# To save it
+# "images/plot3.gif")
 
 
 # Lets make another gif
-another_gif <- ggplot(tor_df,
-                      aes(x = as.Date(as.POSIXct(BEGIN_DATE_TIME,
+dam_by_event_per_state <- ggplot(tor_df,
+                                 aes(x = as.Date(as.POSIXct(BEGIN_DATE_TIME,
                                                  origin = "1970-01-01")),
-                          y = log(DAMAGE_PROPERTY + 1,
-                                  base = exp(1)),
-                          frame = STATE,
-                          col = log(DAMAGE_PROPERTY + 1,
-                                    base = exp(1)))) +
+                                     y = log(DAMAGE_PROPERTY + 1,
+                                             base = exp(1)),
+                                     frame = STATE,
+                                     col = log(DAMAGE_PROPERTY + 1,
+                                               base = exp(1)))) +
   theme_bw() +
   geom_jitter(width = 0.10,
               height = 0.10,
               size = 6,
               alpha = 0.55) +
-  scale_colour_gradientn(colours = rainbow(10))
+  scale_colour_gradientn(colours = rainbow(10)) +
+  labs(x = "Date",
+       y = "Log-Transformed Property Damage (US dollars)",
+       title = "Tornado-Induced Property Damage by Event in:") +
+  theme(plot.title = element_text(hjust = 0.5, size = 27),
+        axis.title = element_text(size = 20),
+        axis.text = element_text(size = 18),
+        legend.position = "none",
+        aspect.ratio = 2/3)
 
 
 # Animate the gif
-gganimate::gganimate(another_gif,
-                     ani.width = 1536,
-                     ani.height = 800)
+gganimate::gganimate(dam_by_event_per_state,
+                     ani.width = 1500,
+                     ani.height = 1000)
+# To save it
+# "images/plot4.gif"
 
+
+# Another gif
+US_bounds <- c(left = -125, bottom = 25.75, right = -67, top = 49)
+
+US_map <- get_stamenmap(US_bounds, zoom = 5, maptype = "toner-lite")
+
+map_plot <- ggmap(US_map) +
+  geom_jitter(data = tor_df,
+              aes(x = BEGIN_LON,
+                  y = BEGIN_LAT,
+                  col = log(DAMAGE_PROPERTY + 1,
+                            base = exp(1)),
+                  frame = YEAR,
+                  size = log(DAMAGE_PROPERTY + 1,
+                             base = exp(1))),
+              width = 0.05,
+              height = 0.05,
+              alpha = 0.35) +
+  theme_bw() +
+  scale_colour_gradientn(colours = rainbow(7))
+
+
+gganimate::gganimate(map_plot,
+                     ani.width = 1500,
+                     ani.height = 1000)
 
 
