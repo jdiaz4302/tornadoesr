@@ -26,21 +26,23 @@ DPY$Damage <- DPY$x
 ggplot(DPY,
        aes(x = Category,
            y = log(Damage))) +
+  geom_area(fill = "red",
+            alpha = 0.25) +
   geom_line(lwd = 1.75,
-            colour = "grey75") + 
+            colour = "grey45") +
   scale_y_continuous(limits = c(0,
                                 25)) +
   scale_x_continuous(breaks = 1997:2016) +
   geom_hline(aes(yintercept = 17),
              lty = 2,
              lwd = 1.5,
-             colour = "red4") +
+             colour = "black") +
   geom_hline(aes(yintercept = 23),
              lty = 2,
              lwd = 1.5,
-             colour = "red4") +
+             colour = "black") +
   geom_point(size = 5.25,
-             colour = "navy") +
+             colour = "red4") +
   geom_text(aes(2001,
                 23,
                 label = "Over $9,700,000,000.00",
@@ -60,6 +62,6 @@ ggplot(DPY,
         axis.title = element_text(size = 17),
         legend.position = "none",
         axis.text = element_text(size = 15),
-        aspect.ratio = 8/11)
+        aspect.ratio = 8/13)
  
 
