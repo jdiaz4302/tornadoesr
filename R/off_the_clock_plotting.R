@@ -5,10 +5,12 @@
 library(ggplot2)
 library(gganimate)
 library(ggmap)
+library(viridis)
+library(animation)
 
 
 # Call the data
-source("R/3_format_for_python.R")
+source("R/3_format_for_python_keeps_month.R")
 
 
 # Get rid of 2017 since its an incomplete year
@@ -478,20 +480,22 @@ map_plot <- ggmap(US_map) +
   geom_jitter(data = tor_df,
               aes(x = BEGIN_LON,
                   y = BEGIN_LAT,
-                  col = log(DAMAGE_PROPERTY + 1,
-                            base = exp(1)),
+                  fill = log(DAMAGE_PROPERTY + 1,
+                             base = exp(1)),
                   frame = YEAR,
                   size = log(DAMAGE_PROPERTY + 1,
                              base = exp(1))),
               width = 0.05,
               height = 0.05,
-              alpha = 0.75) +
+              alpha = 0.60,
+              pch = 21,
+              col = "black") +
   theme_bw() +
-  scale_colour_gradientn(colours = rainbow(7)) +
+  scale_fill_gradientn(colours = magma(100, direction = -1)) +
   labs(x = "Longitude",
        y = "Latitude",
        title = "Tornado-Induced Property Damage by Event in:",
-       col = "Log Transformed Property Damage (US dollars)",
+       fill = "Log Transformed Property Damage (US dollars)",
        size = "Log Transformed Property Damage (US dollars)") +
   theme(plot.title = element_text(hjust = 0.5, size = 27),
         axis.title = element_text(size = 20),
@@ -504,4 +508,36 @@ gganimate::gganimate(map_plot,
                      ani.height = 950)
 # Save it
 # "images/plot5.gif"
+
+
+# Lets do cumulative tornado-induced property damage
+tor_df <- tor_df[with(tor_df, order(BEGIN_DATE_TIME, DAMAGE_PROPERTY)), ]
+
+rownames(tor_df) <- NULL
+
+tor_df$CUM_DAM_PROP <- zoo::rollapplyr(tor_df$DAMAGE_PROPERTY,
+                                       length(tor_df$DAMAGE_PROPERTY),
+                                       partial = TRUE,
+                                       FUN = sum)
+
+# Make the GIF
+saveGIF( {
+  for (i in 1:60) {
+    print(ggplot(tor_df) +
+            theme_bw() +
+            geom_line(aes(x = BEGIN_DATE_TIME,
+                          y = CUM_DAM_PROP),
+                      lwd = 2,
+                      col = "red") +
+            labs(x = "Date",
+                 y = "Property Damage",
+                 title = "Cumulative Tornado-Induced Property Damage since Jan 1, 1997") +
+            theme(plot.title = element_text(hjust = 0.5, size = 13),
+                  axis.title = element_text(size = 12),
+                  axis.text = element_text(size = 10)) +
+            xlim(range(tor_df$BEGIN_DATE_TIME)[1],
+                 range(tor_df$BEGIN_DATE_TIME)[1] + i * ((range(tor_df$BEGIN_DATE_TIME)[2] - range(tor_df$BEGIN_DATE_TIME)[1]) / 60)))
+  }
+})
+
 
