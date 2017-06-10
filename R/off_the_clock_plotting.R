@@ -528,7 +528,8 @@ saveGIF( {
             geom_line(aes(x = BEGIN_DATE_TIME,
                           y = CUM_DAM_PROP),
                       lwd = 2,
-                      col = "red") +
+                      col = "dark red",
+                      alpha = 0.75) +
             labs(x = "Date",
                  y = "Property Damage",
                  title = "Cumulative Tornado-Induced Property Damage since Jan 1, 1997") +
