@@ -130,8 +130,14 @@ ggplot(tor_top_10_df,
               height = 0.10,
               size = 3,
               alpha = .4) +
-  geom_segment(aes(xend = STATE, y = `2.5 %`, yend = `97.5 %`), 
-               color = 'grey35', data = confint_d, size = 7) +
+  stat_summary(aes(y = DAMAGE_PROPERTY, group = 1),
+               fun.y = mean,
+               col = "grey25",
+               group = 1,
+               geom = "point",
+               size = 10,
+               shape = 15,
+               alpha = 0.85) +
   labs(x = "State",
        y = "Log-Transformed Property Damage (US dollars)",
        title = "Tornado-Induced Property Damage",
