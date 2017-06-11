@@ -468,11 +468,11 @@ gganimate::gganimate(dam_by_event_per_state,
 
 # Making another gif
 # Set bounds for continental US
-US_bounds <- c(left = -125, bottom = 25.75, right = -67, top = 49)
+US_bounds <- c(left = -125, bottom = 23, right = -66, top = 50)
 
 
 # Get the base map
-US_map <- get_stamenmap(US_bounds, zoom = 5, maptype = "toner")
+US_map <- get_stamenmap(US_bounds, zoom = 5, maptype = "toner-lite")
 
 
 # Plot the tornado events on it
@@ -481,17 +481,43 @@ map_plot <- ggmap(US_map) +
               aes(x = BEGIN_LON,
                   y = BEGIN_LAT,
                   fill = log(DAMAGE_PROPERTY + 1,
-                             base = exp(1)),
-                  frame = YEAR,
-                  size = log(DAMAGE_PROPERTY + 1,
                              base = exp(1))),
               width = 0.05,
               height = 0.05,
-              alpha = 0.60,
               pch = 21,
-              col = "black") +
+              col = "black",
+              size = 3) +
   theme_bw() +
-  scale_fill_gradientn(colours = magma(100, direction = -1)) +
+  scale_fill_gradientn(colours = inferno(5, direction = 1)) +
+  labs(x = "Longitude",
+       y = "Latitude",
+       title = "Tornado-Induced Property Damage by Event",
+       fill = "Log Transformed Property Damage (US dollars)",
+       size = "Log Transformed Property Damage (US dollars)") +
+  theme(plot.title = element_text(hjust = 0.5, size = 27),
+        axis.title = element_text(size = 20),
+        axis.text = element_text(size = 18))
+
+
+# View it
+map_plot
+
+
+# Map gif
+map_gif <- ggmap(US_map) +
+  geom_jitter(data = tor_df,
+              aes(x = BEGIN_LON,
+                  y = BEGIN_LAT,
+                  fill = log(DAMAGE_PROPERTY + 1,
+                             base = exp(1)),
+                  frame = YEAR),
+              width = 0.05,
+              height = 0.05,
+              pch = 21,
+              col = "black",
+              size = 5) +
+  theme_bw() +
+  scale_fill_gradientn(colours = inferno(5, direction = 1)) +
   labs(x = "Longitude",
        y = "Latitude",
        title = "Tornado-Induced Property Damage by Event in:",
@@ -503,11 +529,11 @@ map_plot <- ggmap(US_map) +
 
 
 # Animate it
-gganimate::gganimate(map_plot,
+gganimate::gganimate(map_gif,
                      ani.width = 1725,
                      ani.height = 950)
 # Save it
-# "images/plot5.gif"
+# "images/plot6.gif"
 
 
 # Lets do cumulative tornado-induced property damage
