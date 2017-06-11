@@ -7,7 +7,7 @@ library(ggplot2)
 
 
 # Calling the data
-source("R/3_format_for_python.R")
+source("R/3_format_for_prop_dam_visualizations.R")
 
 
 # Get property damage per year
@@ -33,7 +33,7 @@ ggplot(DPY,
   scale_y_continuous(limits = c(0,
                                 25)) +
   scale_x_continuous(breaks = 1997:2016) +
-  geom_hline(aes(yintercept = 17),
+  geom_hline(aes(yintercept = 19),
              lty = 2,
              lwd = 1.5,
              colour = "black") +
@@ -49,9 +49,10 @@ ggplot(DPY,
                 vjust = -.75),
                 size = 5) +
   geom_text(aes(2014,
-                17,
-                label = "Over $24,000,000.00",
-                vjust = -.75),
+                19,
+                label = "Over $178,000,000.00",
+                vjust = 1.5,
+                hjust = 1),
                 size = 5) +
   xlab("Year") +
   ylab("Log-Transformed Property Damage (US dollars)") +
