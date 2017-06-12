@@ -11,6 +11,10 @@ As of now, the project aims to predict tornado-induced property damage based on 
 
 Variables of interest were then passed over to python, where I sought to develop accurate, predictive neural networks using the early release beta Pytorch deep learning framework.
 
-## Best Model So Far
+## Best Model So Far - June 4th
 
 ![](https://raw.githubusercontent.com/jdiaz4302/tornadoesr/master/images/best_model_june_4_2017.png)
+
+### Very relevent
+
+![](https://imgs.xkcd.com/comics/here_to_help.png)
