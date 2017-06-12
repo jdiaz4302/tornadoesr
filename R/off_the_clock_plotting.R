@@ -364,7 +364,7 @@ map_plot <- ggmap(US_map) +
 map_plot
 
 
-# Map gif
+# Map gif - by year
 map_gif <- ggmap(US_map) +
   geom_jitter(data = tor_df,
               aes(x = BEGIN_LON,
@@ -396,6 +396,48 @@ gganimate::gganimate(map_gif,
                      interval = 1.75)
 # Save it
 # "images/plot6.gif"
+
+
+# Format month as factor
+tor_df$MONTH_NAME <- as.factor(tor_df$MONTH_NAME)
+
+
+# Give it proper sequence
+levels(tor_df$MONTH_NAME) <- month.name
+
+
+# Map gif - by month
+map_gif <- ggmap(US_map) +
+  geom_jitter(data = tor_df,
+              aes(x = BEGIN_LON,
+                  y = BEGIN_LAT,
+                  fill = log(DAMAGE_PROPERTY + 1,
+                             base = exp(1)),
+                  frame = MONTH_NAME),
+              width = 0.05,
+              height = 0.05,
+              pch = 21,
+              col = "black",
+              size = 5) +
+  theme_bw() +
+  scale_fill_gradientn(colours = inferno(5, direction = 1)) +
+  labs(x = "Longitude",
+       y = "Latitude",
+       title = "Tornado-Induced Property Damage by Event in:",
+       fill = "Log Transformed Property Damage (US dollars)",
+       size = "Log Transformed Property Damage (US dollars)") +
+  theme(plot.title = element_text(hjust = 0.5, size = 27),
+        axis.title = element_text(size = 20),
+        axis.text = element_text(size = 18))
+
+
+# Animate it
+gganimate::gganimate(map_gif,
+                     ani.width = 1725,
+                     ani.height = 950,
+                     interval = 1.75)
+# Save it
+# "images/plot8.gif"
 
 
 # Lets do cumulative tornado-induced property damage
