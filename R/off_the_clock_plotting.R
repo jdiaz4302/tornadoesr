@@ -143,188 +143,188 @@ ggplot(tor_top_10_df,
 
 
 # Get the average per year per state
-avg_ALA_by_year <- aggregate(ALA_df$DAMAGE_PROPERTY,
-                             list(Category = ALA_df$YEAR),
-                             mean)
-
-state <- c(rep("ALABAMA", nrow(avg_ALA_by_year)))
-
-avg_ALA_by_year <- cbind(avg_ALA_by_year,
-                         state)
-
-
-avg_ARK_by_year <- aggregate(ARK_df$DAMAGE_PROPERTY,
-                             list(Category = ARK_df$YEAR),
-                             mean)
-
-state <- c(rep("ARKANSAS", nrow(avg_ARK_by_year)))
-
-avg_ARK_by_year <- cbind(avg_ARK_by_year,
-                         state)
-
-
-avg_GA_by_year <- aggregate(GA_df$DAMAGE_PROPERTY,
-                            list(Category = GA_df$YEAR),
-                            mean)
-
-state <- c(rep("GEORGIA", nrow(avg_GA_by_year)))
-
-avg_GA_by_year <- cbind(avg_GA_by_year,
-                        state)
-
-
-avg_ILL_by_year <- aggregate(ILL_df$DAMAGE_PROPERTY,
-                             list(Category = ILL_df$YEAR),
-                             mean)
-
-state <- c(rep('ILLINOIS', nrow(avg_ILL_by_year)))
-
-avg_ILL_by_year <- cbind(avg_ILL_by_year,
-                         state)
-
-
-avg_MISSIP_by_year <- aggregate(MISSIP_df$DAMAGE_PROPERTY,
-                                list(Category = MISSIP_df$YEAR),
-                                mean)
-
-state <- c(rep("MISSISSIPPI", nrow(avg_MISSIP_by_year)))
-
-avg_MISSIP_by_year <- cbind(avg_MISSIP_by_year,
-                            state)
-
-
-avg_MISSOURI_by_year <- aggregate(MISSOURI_df$DAMAGE_PROPERTY,
-                                  list(Category = MISSOURI_df$YEAR),
-                                  mean)
-
-state <- c(rep("MISSOURI", nrow(avg_MISSOURI_by_year)))
-
-avg_MISSOURI_by_year <- cbind(avg_MISSOURI_by_year,
-                              state)
-
-
-avg_KANSAS_by_year <- aggregate(KANSAS_df$DAMAGE_PROPERTY,
-                                list(Category = KANSAS_df$YEAR),
-                                mean)
-
-state <- c(rep("KANSAS", nrow(avg_KANSAS_by_year)))
-
-avg_KANSAS_by_year <- cbind(avg_KANSAS_by_year,
-                            state)
-
-
-avg_OK_by_year <- aggregate(OK_df$DAMAGE_PROPERTY,
-                            list(Category = OK_df$YEAR),
-                            mean)
-
-state <- c(rep("OKLAHOMA", nrow(avg_OK_by_year)))
-
-avg_OK_by_year <- cbind(avg_OK_by_year,
-                        state)
-
-
-avg_TENN_by_year <- aggregate(TENN_df$DAMAGE_PROPERTY,
-                              list(Category = TENN_df$YEAR),
-                              mean)
-
-state <- c(rep("TENNESSEE", nrow(avg_TENN_by_year)))
-
-avg_TENN_by_year <- cbind(avg_TENN_by_year,
-                          state)
-
-
-avg_TX_by_year <- aggregate(TX_df$DAMAGE_PROPERTY,
-                            list(Category = TX_df$YEAR),
-                            mean)
-
-state <- c(rep("TEXAS", nrow(avg_TX_by_year)))
-
-avg_TX_by_year <- cbind(avg_TX_by_year,
-                        state)
-
+#avg_ALA_by_year <- aggregate(ALA_df$DAMAGE_PROPERTY,
+#                             list(Category = ALA_df$YEAR),
+#                             mean)
+#
+#state <- c(rep("ALABAMA", nrow(avg_ALA_by_year)))
+#
+#avg_ALA_by_year <- cbind(avg_ALA_by_year,
+#                         state)
+#
+#
+#avg_ARK_by_year <- aggregate(ARK_df$DAMAGE_PROPERTY,
+#                             list(Category = ARK_df$YEAR),
+#                             mean)
+#
+#state <- c(rep("ARKANSAS", nrow(avg_ARK_by_year)))
+#
+#avg_ARK_by_year <- cbind(avg_ARK_by_year,
+#                         state)
+#
+#
+#avg_GA_by_year <- aggregate(GA_df$DAMAGE_PROPERTY,
+#                            list(Category = GA_df$YEAR),
+#                            mean)
+#
+#state <- c(rep("GEORGIA", nrow(avg_GA_by_year)))
+#
+#avg_GA_by_year <- cbind(avg_GA_by_year,
+#                        state)
+#
+#
+#avg_ILL_by_year <- aggregate(ILL_df$DAMAGE_PROPERTY,
+#                             list(Category = ILL_df$YEAR),
+#                             mean)
+#
+#state <- c(rep('ILLINOIS', nrow(avg_ILL_by_year)))
+#
+#avg_ILL_by_year <- cbind(avg_ILL_by_year,
+#                         state)
+#
+#
+#avg_MISSIP_by_year <- aggregate(MISSIP_df$DAMAGE_PROPERTY,
+#                                list(Category = MISSIP_df$YEAR),
+#                                mean)
+#
+#state <- c(rep("MISSISSIPPI", nrow(avg_MISSIP_by_year)))
+#
+#avg_MISSIP_by_year <- cbind(avg_MISSIP_by_year,
+#                            state)
+#
+#
+#avg_MISSOURI_by_year <- aggregate(MISSOURI_df$DAMAGE_PROPERTY,
+#                                  list(Category = MISSOURI_df$YEAR),
+#                                  mean)
+#
+#state <- c(rep("MISSOURI", nrow(avg_MISSOURI_by_year)))
+#
+#avg_MISSOURI_by_year <- cbind(avg_MISSOURI_by_year,
+#                              state)
+#
+#
+#avg_KANSAS_by_year <- aggregate(KANSAS_df$DAMAGE_PROPERTY,
+#                                list(Category = KANSAS_df$YEAR),
+#                                mean)
+#
+#state <- c(rep("KANSAS", nrow(avg_KANSAS_by_year)))
+#
+#avg_KANSAS_by_year <- cbind(avg_KANSAS_by_year,
+#                            state)
+#
+#
+#avg_OK_by_year <- aggregate(OK_df$DAMAGE_PROPERTY,
+#                            list(Category = OK_df$YEAR),
+#                            mean)
+#
+#state <- c(rep("OKLAHOMA", nrow(avg_OK_by_year)))
+#
+#avg_OK_by_year <- cbind(avg_OK_by_year,
+#                        state)
+#
+#
+#avg_TENN_by_year <- aggregate(TENN_df$DAMAGE_PROPERTY,
+#                              list(Category = TENN_df$YEAR),
+#                              mean)
+#
+#state <- c(rep("TENNESSEE", nrow(avg_TENN_by_year)))
+#
+#avg_TENN_by_year <- cbind(avg_TENN_by_year,
+#                          state)
+#
+#
+#avg_TX_by_year <- aggregate(TX_df$DAMAGE_PROPERTY,
+#                            list(Category = TX_df$YEAR),
+#                            mean)
+#
+#state <- c(rep("TEXAS", nrow(avg_TX_by_year)))
+#
+#avg_TX_by_year <- cbind(avg_TX_by_year,
+#                        state)
+#
 # Combine them all
-intermediate_11 <- rbind(avg_ALA_by_year, avg_ARK_by_year)
-
-intermediate_12 <- rbind(intermediate_11, avg_GA_by_year)
-
-intermediate_13 <- rbind(intermediate_12, avg_ILL_by_year)
-
-intermediate_14 <- rbind(intermediate_13, avg_MISSIP_by_year)
-
-intermediate_15 <- rbind(intermediate_14, avg_MISSOURI_by_year)
-
-intermediate_16 <- rbind(intermediate_15, avg_KANSAS_by_year)
-
-intermediate_17 <- rbind(intermediate_16, avg_OK_by_year)
-
-intermediate_18 <- rbind(intermediate_17, avg_TENN_by_year)
-
-avg_by_state_by_year <- rbind(intermediate_18, avg_TX_by_year)
-
-
+#intermediate_11 <- rbind(avg_ALA_by_year, avg_ARK_by_year)
+#
+#intermediate_12 <- rbind(intermediate_11, avg_GA_by_year)
+#
+#intermediate_13 <- rbind(intermediate_12, avg_ILL_by_year)
+#
+#intermediate_14 <- rbind(intermediate_13, avg_MISSIP_by_year)
+#
+#intermediate_15 <- rbind(intermediate_14, avg_MISSOURI_by_year)
+#
+#intermediate_16 <- rbind(intermediate_15, avg_KANSAS_by_year)
+#
+#intermediate_17 <- rbind(intermediate_16, avg_OK_by_year)
+#
+#intermediate_18 <- rbind(intermediate_17, avg_TENN_by_year)
+#
+#avg_by_state_by_year <- rbind(intermediate_18, avg_TX_by_year)
+#
+#
 # Log transform it
-avg_by_state_by_year$x <- log(avg_by_state_by_year$x + 1,
-                              base = exp(1))
-
-
+#avg_by_state_by_year$x <- log(avg_by_state_by_year$x + 1,
+#                              base = exp(1))
+#
+#
 # Better looking variable name for the plot
-avg_by_state_by_year$STATE <- avg_by_state_by_year$state
-
-
+#avg_by_state_by_year$STATE <- avg_by_state_by_year$state
+#
+#
 # Plot it
-ggplot(avg_by_state_by_year,
-       aes(x = Category,
-           y = x,
-           group = STATE,
-           col = STATE)) +
-  geom_line(size = 1.15,
-            alpha = 0.8) +
-  geom_jitter(width = 0.05,
-              height = 0.05,
-              size = 5) +
-  theme_bw() +
-  labs(x = "Year",
-       y = "Log-Transformed Property Damage (US dollars)",
-       title = "Average Tornado-Induced Property Damage",
-       subtitle = "Per Event in the Top 10 Most Damaged States") +
-  theme(plot.title = element_text(hjust = 0.5, size = 24),
-        plot.subtitle = element_text(hjust = 0.5, size = 15),
-        axis.title = element_text(size = 17),
-        axis.text = element_text(size = 14),
-        aspect.ratio = 8/11) + 
-  scale_color_brewer(palette = "Paired") +
-  coord_cartesian(ylim = c(0, 20)) 
-
-
+#ggplot(avg_by_state_by_year,
+#       aes(x = Category,
+#           y = x,
+#           group = STATE,
+#           col = STATE)) +
+#  geom_line(size = 1.15,
+#            alpha = 0.8) +
+#  geom_jitter(width = 0.05,
+#              height = 0.05,
+#              size = 5) +
+#  theme_bw() +
+#  labs(x = "Year",
+#       y = "Log-Transformed Property Damage (US dollars)",
+#       title = "Average Tornado-Induced Property Damage",
+#       subtitle = "Per Event in the Top 10 Most Damaged States") +
+#  theme(plot.title = element_text(hjust = 0.5, size = 24),
+#        plot.subtitle = element_text(hjust = 0.5, size = 15),
+#        axis.title = element_text(size = 17),
+#        axis.text = element_text(size = 14),
+#        aspect.ratio = 8/11) + 
+#  scale_color_brewer(palette = "Paired") +
+#  coord_cartesian(ylim = c(0, 20)) 
+#
+#
 # Let's make a gif
-dam_by_event_per_year <- ggplot(tor_top_10_df,
-                                aes(x = STATE,
-                                    y = DAMAGE_PROPERTY,
-                                    col = STATE,
-                                    frame = YEAR)) +
-  theme_bw() +
-  geom_jitter(width = 0.05,
-              height = 0.05,
-              size = 6,
-              alpha = 0.55) +
-  labs(x = "State",
-       y = "Log-Transformed Property Damage (US dollars)",
-       title = "Tornado-Induced Property Damage by Event in:",
-       subtitle = "Per Event in the Top 10 Most Damaged States") +
-  theme(plot.title = element_text(hjust = 0.5, size = 27),
-        plot.subtitle = element_text(hjust = 0.5, size = 18),
-        axis.title = element_text(size = 20),
-        axis.text = element_text(size = 18),
-        legend.position = "none",
-        aspect.ratio = 15/27)
-
-
+#dam_by_event_per_year <- ggplot(tor_top_10_df,
+#                                aes(x = STATE,
+#                                    y = DAMAGE_PROPERTY,
+#                                    col = STATE,
+#                                    frame = YEAR)) +
+#  theme_bw() +
+#  geom_jitter(width = 0.15,
+#              height = 0.15,
+#              size = 6,
+#              alpha = 0.55) +
+#  labs(x = "State",
+#       y = "Log-Transformed Property Damage (US dollars)",
+#       title = "Tornado-Induced Property Damage by Event in:",
+#       subtitle = "Per Event in the Top 10 Most Damaged States") +
+#  theme(plot.title = element_text(hjust = 0.5, size = 27),
+#        plot.subtitle = element_text(hjust = 0.5, size = 18),
+#        axis.title = element_text(size = 20),
+#        axis.text = element_text(size = 18),
+#        legend.position = "none",
+#        aspect.ratio = 15/27)
+#
+#
 # Animate the gif
-gganimate::gganimate(dam_by_event_per_year,
-                     ani.width = 1725,
-                     ani.height = 950)
+#gganimate::gganimate(dam_by_event_per_year,
+#                     ani.width = 1725,
+#                     ani.height = 950)
 # To save it
-# "images/plot3.gif")
+# "images/plot4.gif")
 
 
 # Making another gif
@@ -473,7 +473,9 @@ saveGIF( {
 },
 interval = 0.75,
 ani.width = 1250,
-ani.height = 1000,
-movie.name = "images/plot7.gif")
+ani.height = 1000)
+
+#,
+#movie.name = "images/plot7.gif")
 
 
