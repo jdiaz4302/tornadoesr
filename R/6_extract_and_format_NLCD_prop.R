@@ -1,5 +1,6 @@
 
 
+
 # Get packages
 library(raster)
 
@@ -28,12 +29,16 @@ tor_Spatial <- spTransform(tor_Spatial,
                            crs(NLCD))
 
 
+# For extraction
+avg_tor_length_meters <- mean(tor_df$TOR_LENGTH) * 1e3
+
+
 # Do the extraction and time it
 Sys.time()
 
 tor_events_LC <- raster::extract(NLCD,
                                  tor_Spatial,
-                                 buffer = 2100)
+                                 buffer = avg_tor_length_meters)
 
 Sys.time()
 
@@ -42,11 +47,10 @@ Sys.time()
 # and time it
 Sys.time()
 
-LC_prop <- lapply(tor_events_LC,
-                  function(x){
-                    prop.table(table(x))
-                    }
-                  )
+LC_prop <- lapply(tor_events_LC, function(x) {
+  prop.table(table(x))
+  }
+  )
 
 Sys.time()
 
@@ -123,4 +127,5 @@ colnames(tor_LC_df)[colnames(tor_LC_df) == "percent.12"] <- "ICE_SNOW_PROP"
 
 # Then save the dataframe as .csv
 # write_csv(tor_LC_df, "data/raw/Tor_data_with_LC.csv")
+
 
