@@ -32,15 +32,15 @@ mean(test_set$DAMAGE_PROPERTY)
 
 # The histograms
 hist(train_set$DAMAGE_PROPERTY,
-     breaks = 50,
+     breaks = 250,
      xlim = c(-2, 2))
 
 hist(cv_set$DAMAGE_PROPERTY,
-     breaks = 50,
+     breaks = 250,
      xlim = c(-2, 2))
 
 hist(test_set$DAMAGE_PROPERTY,
-     breaks = 50,
+     breaks = 250,
      xlim = c(-2, 2))
 
 
