@@ -65,10 +65,7 @@ tor_df$BEGIN_DATE_TIME <- as.numeric(tor_df$BEGIN_DATE_TIME)
 
 
 # Keeping only variables of interest
-tor_df <- dplyr::select(tor_df, c(INJURIES_DIRECT,
-                                  DEATHS_DIRECT,
-                                  DAMAGE_PROPERTY,
-                                  DAMAGE_CROPS,
+tor_df <- dplyr::select(tor_df, c(DAMAGE_PROPERTY,
                                   DURATION_SECONDS,
                                   BEGIN_LAT,
                                   BEGIN_LON,
@@ -76,9 +73,9 @@ tor_df <- dplyr::select(tor_df, c(INJURIES_DIRECT,
                                   TOR_WIDTH,
                                   BEGIN_DATE_TIME,
                                   EVENT_ID,
-                                  YEAR,                  # For why_care_plot
-                                  CZ_NAME,               # For income data
-                                  STATE))                # For income data   
+                                  YEAR,
+                                  CZ_NAME,
+                                  STATE))  
 
 
 # PyTorch really doesn't like NA values
@@ -105,21 +102,21 @@ tor_df$DAMAGE_PROPERTY_temp <- as.numeric(tor_df$DAMAGE_PROPERTY_temp)
 
 
 # Remove letters from crop damage values, store as temp
-tor_df$DAMAGE_CROPS_temp <- tor_df$DAMAGE_CROPS
-
-tor_df$DAMAGE_CROPS_temp <- gsub("M",
-                                 "",
-                                 tor_df$DAMAGE_CROPS_temp)
-
-tor_df$DAMAGE_CROPS_temp <- gsub("K",
-                                 "",
-                                 tor_df$DAMAGE_CROPS_temp)
-
-tor_df$DAMAGE_CROPS_temp <- gsub("B",
-                                 "",
-                                 tor_df$DAMAGE_CROPS_temp)
-
-tor_df$DAMAGE_CROPS_temp <- as.numeric(tor_df$DAMAGE_CROPS_temp)
+#tor_df$DAMAGE_CROPS_temp <- tor_df$DAMAGE_CROPS
+#
+#tor_df$DAMAGE_CROPS_temp <- gsub("M",
+#                                 "",
+#                                 tor_df$DAMAGE_CROPS_temp)
+#
+#tor_df$DAMAGE_CROPS_temp <- gsub("K",
+#                                 "",
+#                                 tor_df$DAMAGE_CROPS_temp)
+#
+#tor_df$DAMAGE_CROPS_temp <- gsub("B",
+#                                 "",
+#                                 tor_df$DAMAGE_CROPS_temp)
+#
+#tor_df$DAMAGE_CROPS_temp <- as.numeric(tor_df$DAMAGE_CROPS_temp)
 
 
 # Give all entries a homogenous format, for easier cleaning
@@ -128,8 +125,8 @@ tor_df$DAMAGE_PROPERTY_temp <- sprintf("%10.2f",
                                        tor_df$DAMAGE_PROPERTY_temp)
 
 # For crops
-tor_df$DAMAGE_CROPS_temp <- sprintf("%10.2f",
-                                    tor_df$DAMAGE_CROPS_temp)
+#tor_df$DAMAGE_CROPS_temp <- sprintf("%10.2f",
+#                                    tor_df$DAMAGE_CROPS_temp)
 
 
 # Creates columns to acknowledge the existance of the abbreviations
@@ -144,14 +141,14 @@ tor_df$B_EXIST_PROPERTY <- grepl("B",
                                  tor_df$DAMAGE_PROPERTY)
 
 # For crops
-tor_df$K_EXIST_CROPS <- grepl("K",
-                              tor_df$DAMAGE_CROPS)
-
-tor_df$M_EXIST_CROPS <- grepl("M",
-                              tor_df$DAMAGE_CROPS)
-
-tor_df$B_EXIST_CROPS <- grepl("B",
-                              tor_df$DAMAGE_CROPS)
+#tor_df$K_EXIST_CROPS <- grepl("K",
+#                              tor_df$DAMAGE_CROPS)
+#
+#tor_df$M_EXIST_CROPS <- grepl("M",
+#                              tor_df$DAMAGE_CROPS)
+#
+#tor_df$B_EXIST_CROPS <- grepl("B",
+#                              tor_df$DAMAGE_CROPS)
 
 
 # Go ahead and drop the decimals
@@ -161,9 +158,9 @@ tor_df$DAMAGE_PROPERTY_temp <- gsub("\\.",
                                     tor_df$DAMAGE_PROPERTY_temp)
 
 # For crops
-tor_df$DAMAGE_CROPS_temp <- gsub("\\.",
-                                    "",
-                                    tor_df$DAMAGE_CROPS_temp)
+#tor_df$DAMAGE_CROPS_temp <- gsub("\\.",
+#                                    "",
+#                                    tor_df$DAMAGE_CROPS_temp)
 
 
 # Get the correct numeric values, substituting abbreviations for appropriate values
@@ -183,21 +180,21 @@ tor_df$DAMAGE_PROPERTY_FIXED <- ifelse(tor_df$K_EXIST_PROPERTY == TRUE,
   as.numeric()
 
 # For crops
-tor_df$DAMAGE_CROPS_FIXED <- ifelse(tor_df$K_EXIST_CROPS == TRUE,
-                                    tor_df$DAMAGE_CROPS_FIXED <- paste0(tor_df$DAMAGE_CROPS_temp,
-                                                                        "0"),
-                                    ifelse(tor_df$M_EXIST_CROPS == TRUE,
-                                           tor_df$DAMAGE_CROPS_FIXED <- paste0(tor_df$DAMAGE_CROPS_temp,
-                                                                               "0000"),
-                                           ifelse(tor_df$B_EXIST_CROPS == TRUE,
-                                                  tor_df$DAMAGE_CROPS_FIXED <- paste0(tor_df$DAMAGE_CROPS_temp,
-                                                                                      "0000000"),
-                                                  tor_df$DAMAGE_CROPS_FIXED <- substr(tor_df$DAMAGE_CROPS_temp,
-                                                                                      1,
-                                                                                      nchar(tor_df$DAMAGE_CROPS_temp) - 2)))) %>%
-  as.numeric()
-
-
+#tor_df$DAMAGE_CROPS_FIXED <- ifelse(tor_df$K_EXIST_CROPS == TRUE,
+#                                    tor_df$DAMAGE_CROPS_FIXED <- paste0(tor_df$DAMAGE_CROPS_temp,
+#                                                                        "0"),
+#                                    ifelse(tor_df$M_EXIST_CROPS == TRUE,
+#                                           tor_df$DAMAGE_CROPS_FIXED <- paste0(tor_df$DAMAGE_CROPS_temp,
+#                                                                               "0000"),
+#                                           ifelse(tor_df$B_EXIST_CROPS == TRUE,
+#                                                  tor_df$DAMAGE_CROPS_FIXED <- paste0(tor_df$DAMAGE_CROPS_temp,
+#                                                                                      "0000000"),
+#                                                  tor_df$DAMAGE_CROPS_FIXED <- substr(tor_df$DAMAGE_CROPS_temp,
+#                                                                                      1,
+#                                                                                      nchar(tor_df$DAMAGE_CROPS_temp) - 2)))) %>%
+#  as.numeric()
+#
+#
 # Some inspection
 # check_df <- select(tor_df,
 #                    c(DAMAGE_PROPERTY,
@@ -220,10 +217,7 @@ tor_df$DAMAGE_CROPS <- tor_df$DAMAGE_CROPS_FIXED
 
 
 # Keep only the variables of interest
-tor_df <- dplyr::select(tor_df, c(INJURIES_DIRECT,
-                                  DEATHS_DIRECT,
-                                  DAMAGE_PROPERTY,
-                                  DAMAGE_CROPS,
+tor_df <- dplyr::select(tor_df, c(DAMAGE_PROPERTY,
                                   DURATION_SECONDS,
                                   BEGIN_LAT,
                                   BEGIN_LON,
@@ -231,9 +225,9 @@ tor_df <- dplyr::select(tor_df, c(INJURIES_DIRECT,
                                   TOR_WIDTH,
                                   BEGIN_DATE_TIME,
                                   EVENT_ID,
-                                  YEAR,                  # For why_care_plot
-                                  CZ_NAME,               # For income data
-                                  STATE))                # For income data
+                                  YEAR,   
+                                  CZ_NAME,
+                                  STATE))
 
 # The nonsequential indices are undesirable (to me)
 rownames(tor_df) <- NULL
