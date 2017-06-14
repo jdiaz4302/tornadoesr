@@ -174,8 +174,23 @@ ggplot(tor_hist_data,
   geom_histogram(bins = 100,
                  fill = "dark red") +
   facet_wrap(~variable) +
-  theme_bw()
+  theme_bw() +
   scale_x_continuous(limits = c(-6,
                                 6))
+
+
+# Get rid of the variables not being analyzed
+tor_LC_df <- dplyr::select(tor_LC_df,
+                           -c(STATE,
+                              EVENT_ID,
+                              BEGIN_DATE_TIME,
+                              CZ_NAME,
+                              state_abbrev,
+                              BEGIN_HOUR,
+                              BEGIN_MINUTE))
+
+
+# Save it
+# write_csv(tor_LC_df, "data/raw/Tor_data_with_interact_effects_processed.csv")
 
 
