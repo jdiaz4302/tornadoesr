@@ -30,57 +30,45 @@ tor_LC_df$INCOME <- county_income_data$X.2[match(do.call(paste, tor_LC_df_names)
 # End of income merge
 
 
-# 1. Produce the average linear speed of the tornado
-tor_LC_df$AVG_LIN_SPEED <- tor_LC_df$TOR_LENGTH / tor_LC_df$DURATION_SECONDS
-
-
-# 2. Produce tornado area
+# 1. Produce tornado area
 tor_LC_df$TOR_AREA <- tor_LC_df$TOR_LENGTH * tor_LC_df$TOR_WIDTH
 
 
-# 3. Produce the average rate of area covered by the tornado
-tor_LC_df$AVG_AREA_COV <- tor_LC_df$TOR_AREA / tor_LC_df$DURATION_SECONDS
-
-
-# 4. Produce total developed intensity
+# 2. Produce total developed intensity
 tor_LC_df$TOT_DEV_INT <- tor_LC_df$DEV_OPEN_PROP * 0.10 +
   tor_LC_df$DEV_LOW_PROP * 0.35 +
   tor_LC_df$DEV_MED_PROP * 0.65 +
   tor_LC_df$DEV_HIGH_PROP * 0.90
 
 
-# 5. Produce total wooded prop
+# 3. Produce total wooded prop
 tor_LC_df$TOT_WOOD_AREA <- tor_LC_df$WOOD_WETLAND_PROP +
   tor_LC_df$DECID_FOREST_PROP +
   tor_LC_df$EVERGR_FOREST_PROP +
   tor_LC_df$MIXED_FOREST_PROP
 
 
-# 6. Produce total wood-dev interaction
+# 4. Produce total wood-dev interaction
 tor_LC_df$WOOD_DEV_INT <- tor_LC_df$TOT_DEV_INT * tor_LC_df$TOT_WOOD_AREA
 
 
-# 7. Produce expected income of the area
+# 5. Produce expected income of the area
 tor_LC_df$EXP_INC_AREA <- tor_LC_df$INCOME * tor_LC_df$TOR_AREA
-
-
-# 8. Produce the rate that the expected income of the area was hit
-tor_LC_df$EXP_INC_RATE <- tor_LC_df$EXP_INC_AREA / tor_LC_df$DURATION_SECONDS
 
 
 # Get the unix time in usable format
 tor_LC_df$BEGIN_DATE_TIME <- as.POSIXct(tor_LC_df$BEGIN_DATE_TIME, origin="1970-01-01")
 
 
-# 9. Produce day of year
+# 6. Produce day of year
 tor_LC_df$DAY_OF_YEAR <- as.numeric(strftime(tor_LC_df$BEGIN_DATE_TIME, format = "%j"))
 
 
-# 10. Produce month
+# 7. Produce month
 tor_LC_df$MONTH <- as.numeric(substr(tor_LC_df$BEGIN_DATE_TIME, 6, 7))
 
 
-# 11. Produce time of day in minutes
+# 8. Produce time of day in minutes
 # Get only time
 tor_LC_df$BEGIN_TIME <- substring(tor_LC_df$BEGIN_DATE_TIME, 12)
 
@@ -94,7 +82,7 @@ tor_LC_df$BEGIN_TIME <- (as.numeric(tor_LC_df$BEGIN_HOUR) * 60) +
   as.numeric(tor_LC_df$BEGIN_MINUTE)
 
 
-# 12. Process STATE - need an informative way to numerify this
+# 9. Process STATE - need an informative way to numerify this
 # Get cumulative damage for each state
 # Get the sum
 DamPerState <- aggregate(tor_LC_df$DAMAGE_PROPERTY,
@@ -134,6 +122,10 @@ dam_per_state_rank <- dplyr::select(dam_per_state_rank,
 tor_LC_df <- merge(x = tor_LC_df,
                    dam_per_state_rank,
                    by = "STATE")
+
+
+# Just to be safe
+tor_LC_df <- na.omit(tor_LC_df)
 
 
 # Save it
