@@ -136,3 +136,7 @@ tor_LC_df <- merge(x = tor_LC_df,
                    by = "STATE")
 
 
+# Save it
+# write_csv(tor_LC_df, "data/raw/Tor_data_with_interact_effects.csv")
+
+
