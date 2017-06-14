@@ -7,11 +7,11 @@ library(dplyr)
 
 
 # Read in the .csv's
-test_set <- read.csv("data/raw/tor_test_set.csv")
+test_set <- read.csv("data/raw/tor_test_set_interact.csv")
 
-cv_set <- read.csv("data/raw/tor_cv_set.csv")
+cv_set <- read.csv("data/raw/tor_cv_set_interact.csv")
 
-training_set <- read.csv("data/raw/tor_train_set.csv")
+training_set <- read.csv("data/raw/tor_train_set_interact.csv")
 
 
 # 0 is the lowest DAMAGE_PROPERTY value
@@ -33,8 +33,8 @@ training_set_wout_zeros <- filter(training_set,
 
 
 # Save them
-# write_csv(test_set_wout_zeros, "data/raw/tor_test_set_no_zeros.csv")
-# write_csv(cv_set_wout_zeros, "data/raw/tor_cv_set_no_zeros.csv")
-# write_csv(training_set_wout_zeros, "data/raw/tor_train_set_no_zeros.csv")
+# write_csv(test_set_wout_zeros, "data/raw/tor_test_set_no_zeros_interact.csv")
+# write_csv(cv_set_wout_zeros, "data/raw/tor_cv_set_no_zeros_interact.csv")
+# write_csv(training_set_wout_zeros, "data/raw/tor_train_set_no_zeros_interact.csv")
 
 
