@@ -17,12 +17,12 @@ Variables of interest were then passed over to python, where I sought to develop
 
 ## Best Model - June 4th
 
-![](https://raw.githubusercontent.com/jdiaz4302/tornadoesr/master/images/best_model_june_4_2017.png)
+![Approximate Error Value: 405](https://raw.githubusercontent.com/jdiaz4302/tornadoesr/master/images/best_model_june_4_2017.png)
 
 ## Best Model - June 13th
 
-![](https://raw.githubusercontent.com/jdiaz4302/tornadoesr/master/images/best_model_june_13_2017.png)
+![Approximate Error Value: 281](https://raw.githubusercontent.com/jdiaz4302/tornadoesr/master/images/best_model_june_13_2017.png)
 
 ## Best Model - June 15th
 
-![](https://raw.githubusercontent.com/jdiaz4302/tornadoesr/master/images/best_model_june_15_2017.png)
+![Approximate Error Value: 302](https://raw.githubusercontent.com/jdiaz4302/tornadoesr/master/images/best_model_june_15_2017.png)
