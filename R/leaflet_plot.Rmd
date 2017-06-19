@@ -1,0 +1,50 @@
+---
+title: "Interactive Map of Tornado-Induced Property Damage"
+output: html_document
+---
+
+
+```{r interactive-map-plot}
+
+
+
+# Packages
+library(leaflet)
+library(viridis)
+
+
+# Import the data
+tor_df <- read.csv("~/earth-analytics/tornadoesr/data/raw/leaflet_viz_data.csv")
+
+
+# Make log-transformed property damage its own column
+tor_df$LOG_DAM <- log(tor_df$DAMAGE_PROPERTY + 1,
+                      base = exp(1))
+
+
+# Get the color a palette
+pal <- colorNumeric(palette = "inferno",
+                    domain = tor_df$LOG_DAM)
+
+
+# No scientific "e+6" notation
+options("scipen" = 100)
+
+
+# Make the interactive map
+leaflet(tor_df) %>%
+  addTiles() %>%
+  addCircleMarkers(lng = tor_df$BEGIN_LON,
+                   lat = tor_df$BEGIN_LAT, 
+                   color = ~pal(tor_df$LOG_DAM),
+                   fill = TRUE,
+                   fillColor = ~pal(tor_df$LOG_DAM),
+                   fillOpacity = 1,
+                   label = ~as.character(tor_df$DAMAGE_PROPERTY),
+                   clusterOptions = markerClusterOptions())
+
+
+
+```
+
+
