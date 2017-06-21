@@ -1,5 +1,5 @@
 ---
-title: "Interactive Map of Tornado-Induced Property Damage"
+title: "Interactive Maps of Tornado-Induced Property Damage"
 author: "Jeremy Diaz"
 date: "June 19, 2017"
 output: html_document
@@ -11,12 +11,11 @@ The data used for this visualization comes from the NOAA-provided Storm Events D
 
 ### Map Details
 
-The value which appears on the dark-grey cluster points is indicative of how many tornado events are being clustered into that point. Each dark-grey cluster point will decompose into individual tornado events upon zooming, which can be done by scrolling the mouse wheel, clicking the interactive buttons, or by clicking on the cluster point of interest. The more brightly-colored a tornado event point is, the more property damage it caused. Tornadoes which caused no property damage, in addition to being black, appear smaller than those which did.
+The value which appears on the grey cluster points is indicative of how many tornado events are being clustered into that point. Each grey cluster point will decompose into individual tornado events upon sufficient zooming; this can be done by scrolling the mouse wheel, clicking the interactive buttons, or by clicking on the cluster point of interest. Tornadoes that caused extreme damage appear yellow; tornadoes that caused intermediate damage appear green (more towards extreme) and blue (more towards no damage); and, tornadoes that caused no damage appear dark purple.
 
 If you hover your mouse over a tornado event point, a label will display the property damage caused by that event and the date when the damage occurred.
 
-```{r interactive_map_plot, echo = FALSE, message = FALSE}
-
+```{r interactive_map_plot_clusters, echo = FALSE, message = FALSE}
 
 
 # Packages
@@ -39,7 +38,7 @@ tor_df$BEGIN_DATE <- substring(tor_df$BEGIN_DATE_TIME, 1, 10)
 
 
 # Get the color a palette
-pal <- colorNumeric(palette = "inferno",
+pal <- colorNumeric(palette = "viridis",
                     domain = tor_df$LOG_DAM)
 
 
@@ -47,7 +46,7 @@ pal <- colorNumeric(palette = "inferno",
 options("scipen" = 100)
 
 
-# Make the interactive map
+# Make the interactive map with clusters
 leaflet(tor_df,
         width = "100%",
         padding = 3,
@@ -57,11 +56,11 @@ leaflet(tor_df,
   addCircleMarkers(lng = tor_df$BEGIN_LON,
                    lat = tor_df$BEGIN_LAT, 
                    stroke = FALSE,
-                   radius = ~ifelse(tor_df$DAMAGE_PROPERTY == 0, 8, 12),
+                   radius = 15,
                    fill = TRUE,
                    fillColor = ~pal(tor_df$LOG_DAM),
                    fillOpacity = 0.85,
-                   labelOptions = labelOptions(textsize = "12px"),
+                   labelOptions = labelOptions(textsize = "15px"),
                    label = ~paste(paste("Property Damages: ",
                                         paste0(paste0("$",
                                                       prettyNum(tor_df$DAMAGE_PROPERTY,
@@ -71,21 +70,57 @@ leaflet(tor_df,
                                   paste("Date: ",
                                         tor_df$BEGIN_DATE),
                                   sep = "   "),
-                   clusterOptions = markerClusterOptions(iconCreateFunction=JS("function (cluster) {    
+                   clusterOptions = markerClusterOptions(radius = 15,
+                                                         iconCreateFunction = JS("function (cluster) {    
     var childCount = cluster.getChildCount();  
     if (childCount < 100) {  
-      c = 'rgba(115, 115, 115, 1.0);'
+      c = 'rgba(150, 150, 150, 1.0);'
     } else if (childCount < 1000) {  
-      c = 'rgba(115, 115, 115, 1);'  
+      c = 'rgba(150, 150, 150, 1);'  
     } else { 
-      c = 'rgba(115, 115, 115, 1);'  
+      c = 'rgba(150, 150, 150, 1);'  
     }    
     return new L.DivIcon({ html: '<div style=\"background-color:'+c+'\"><span>' + childCount + '</span></div>', className: 'marker-cluster', iconSize: new L.Point(40, 40) });
 
   }")))
 
 
-
 ```
 
+### Slightly Modified
 
+The following is the same map as the above with two changes: 
+
+1. There are no clusters 
+2. Point sizes are scaled down for better large-scale viewing
+
+```{r interactive_map_no_clusters, echo = FALSE}
+
+
+# Make the interactive map with clusters
+leaflet(tor_df,
+        width = "100%",
+        padding = 3,
+        options = leafletOptions(minZoom = 4)) %>%
+  addTiles() %>%
+  addProviderTiles(providers$OpenStreetMap) %>%
+  addCircleMarkers(lng = tor_df$BEGIN_LON,
+                   lat = tor_df$BEGIN_LAT, 
+                   stroke = FALSE,
+                   radius = 3,
+                   fill = TRUE,
+                   fillColor = ~pal(tor_df$LOG_DAM),
+                   fillOpacity = 0.95,
+                   labelOptions = labelOptions(textsize = "15px"),
+                   label = ~paste(paste("Property Damages: ",
+                                        paste0(paste0("$",
+                                                      prettyNum(tor_df$DAMAGE_PROPERTY,
+                                                                big.mark = ",",
+                                                                scientific = FALSE)),
+                                               ";")),
+                                  paste("Date: ",
+                                        tor_df$BEGIN_DATE),
+                                  sep = "   "))
+
+
+```
