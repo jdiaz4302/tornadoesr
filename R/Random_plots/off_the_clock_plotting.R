@@ -10,7 +10,7 @@ library(animation)
 
 
 # Call the data
-source("R/3_format_for_prop_dam_visualizations.R")
+source("R/Random_plots/3_format_for_prop_dam_visualizations.R")
 
 
 # Get rid of 2017 since its an incomplete year
@@ -378,15 +378,15 @@ map_gif <- ggmap(US_map) +
               col = "black",
               size = 5) +
   theme_bw() +
-  scale_fill_gradientn(colours = inferno(5, direction = 1)) +
-  labs(x = "Longitude",
-       y = "Latitude",
-       title = "Tornado-Induced Property Damage by Event in:",
-       fill = "Log Transformed Property Damage (US dollars)",
-       size = "Log Transformed Property Damage (US dollars)") +
+  scale_fill_gradientn(colours = inferno(22, direction = 1)) +
+  labs(title = "Tornado-Induced Property Damage by Event in:",
+       fill = "L.T.P.D.") +
   theme(plot.title = element_text(hjust = 0.5, size = 27),
-        axis.title = element_text(size = 20),
-        axis.text = element_text(size = 18))
+        axis.title = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        legend.text = element_text(size = 15),
+        legend.title = element_text(size = 20))
 
 
 # Animate it
@@ -395,15 +395,11 @@ gganimate::gganimate(map_gif,
                      ani.height = 950,
                      interval = 1.75)
 # Save it
-# "images/plot6.gif"
+# "images/keepers/plot6.gif"
 
 
 # Format month as factor
-tor_df$MONTH_NAME <- as.factor(tor_df$MONTH_NAME)
-
-
-# Give it proper sequence
-levels(tor_df$MONTH_NAME) <- month.name
+tor_df$MONTH_NAME <- factor(tor_df$MONTH_NAME, month.name)
 
 
 # Map gif - by month
@@ -420,15 +416,15 @@ map_gif <- ggmap(US_map) +
               col = "black",
               size = 5) +
   theme_bw() +
-  scale_fill_gradientn(colours = inferno(5, direction = 1)) +
-  labs(x = "Longitude",
-       y = "Latitude",
-       title = "Tornado-Induced Property Damage by Event in:",
-       fill = "Log Transformed Property Damage (US dollars)",
-       size = "Log Transformed Property Damage (US dollars)") +
+  scale_fill_gradientn(colours = inferno(22, direction = 1)) +
+  labs(title = "Tornado-Induced Property Damage by Event in:",
+       fill = "L.T.P.D.") +
   theme(plot.title = element_text(hjust = 0.5, size = 27),
-        axis.title = element_text(size = 20),
-        axis.text = element_text(size = 18))
+        axis.title = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        legend.text = element_text(size = 15),
+        legend.title = element_text(size = 20))
 
 
 # Animate it
@@ -437,7 +433,7 @@ gganimate::gganimate(map_gif,
                      ani.height = 950,
                      interval = 1.75)
 # Save it
-# "images/plot8.gif"
+# "images/keepers/plot8.gif"
 
 
 # Lets do cumulative tornado-induced property damage
