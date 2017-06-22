@@ -38,7 +38,7 @@ tor_df$BEGIN_DATE <- substring(tor_df$BEGIN_DATE_TIME, 1, 10)
 
 
 # Get the color a palette
-pal <- colorNumeric(palette = "viridis",
+pal <- colorNumeric(palette = viridis(22),
                     domain = tor_df$LOG_DAM)
 
 
@@ -52,14 +52,14 @@ leaflet(tor_df,
         padding = 3,
         options = leafletOptions(minZoom = 4)) %>%
   addTiles() %>%
-  addProviderTiles(providers$OpenStreetMap) %>%
+  addProviderTiles(providers$CartoDB.DarkMatter) %>%
   addCircleMarkers(lng = tor_df$BEGIN_LON,
                    lat = tor_df$BEGIN_LAT, 
                    stroke = FALSE,
                    radius = 15,
                    fill = TRUE,
                    fillColor = ~pal(tor_df$LOG_DAM),
-                   fillOpacity = 0.85,
+                   fillOpacity = 1,
                    labelOptions = labelOptions(textsize = "15px"),
                    label = ~paste(paste("Property Damages: ",
                                         paste0(paste0("$",
@@ -74,15 +74,20 @@ leaflet(tor_df,
                                                          iconCreateFunction = JS("function (cluster) {    
     var childCount = cluster.getChildCount();  
     if (childCount < 100) {  
-      c = 'rgba(150, 150, 150, 1.0);'
+      c = 'rgba(135, 135, 135, 1.0);'
     } else if (childCount < 1000) {  
-      c = 'rgba(150, 150, 150, 1);'  
+      c = 'rgba(135, 135, 135, 1.0);'  
     } else { 
-      c = 'rgba(150, 150, 150, 1);'  
+      c = 'rgba(135, 135, 135, 1.0);'  
     }    
     return new L.DivIcon({ html: '<div style=\"background-color:'+c+'\"><span>' + childCount + '</span></div>', className: 'marker-cluster', iconSize: new L.Point(40, 40) });
 
-  }")))
+  }"))) %>%
+  addLegend("bottomright",
+            pal = pal,
+            values = ~tor_df$LOG_DAM,
+            opacity = 1,
+            title = "Log-Transformed <br> Property Damage <br> (US dollars + 1)")
 
 
 ```
@@ -103,7 +108,7 @@ leaflet(tor_df,
         padding = 3,
         options = leafletOptions(minZoom = 4)) %>%
   addTiles() %>%
-  addProviderTiles(providers$OpenStreetMap) %>%
+  addProviderTiles(providers$CartoDB.DarkMatter) %>%
   addCircleMarkers(lng = tor_df$BEGIN_LON,
                    lat = tor_df$BEGIN_LAT, 
                    stroke = FALSE,
@@ -120,7 +125,12 @@ leaflet(tor_df,
                                                ";")),
                                   paste("Date: ",
                                         tor_df$BEGIN_DATE),
-                                  sep = "   "))
+                                  sep = "   ")) %>%
+  addLegend("bottomright",
+            pal = pal,
+            values = ~tor_df$LOG_DAM,
+            opacity = 1,
+            title = "Log-Transformed <br> Property Damage <br> (US dollars + 1)")
 
 
 ```
