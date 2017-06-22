@@ -22,6 +22,7 @@ If you hover your mouse over a tornado event point, a label will display the pro
 library(leaflet)
 library(viridis)
 library(mapview)
+library(htmltools)
 
 
 # Import the data
@@ -46,6 +47,20 @@ pal <- colorNumeric(palette = viridis(22),
 options("scipen" = 100)
 
 
+tor_df$DAM_LABEL <- paste("Property Damage: ", paste0("$", prettyNum(tor_df$DAMAGE_PROPERTY,
+                                                                     big.mark = ",",
+                                                                     scientific = FALSE)))
+
+tor_df$DATE_LABEL <- paste("Date: ", tor_df$BEGIN_DATE)
+
+
+# Get the label
+labelz <- lapply(seq(nrow(tor_df)), function(i) {
+  paste0('<dd>', tor_df[i, "DAM_LABEL"], '</dd><dd>', 
+         tor_df[i, "DATE_LABEL"], '</dd>')
+})
+
+
 # Make the interactive map with clusters
 leaflet(tor_df,
         width = "100%",
@@ -61,15 +76,7 @@ leaflet(tor_df,
                    fillColor = ~pal(tor_df$LOG_DAM),
                    fillOpacity = 1,
                    labelOptions = labelOptions(textsize = "15px"),
-                   label = ~paste(paste("Property Damages: ",
-                                        paste0(paste0("$",
-                                                      prettyNum(tor_df$DAMAGE_PROPERTY,
-                                                                big.mark = ",",
-                                                                scientific = FALSE)),
-                                               ";")),
-                                  paste("Date: ",
-                                        tor_df$BEGIN_DATE),
-                                  sep = "   "),
+                   label = lapply(labelz, HTML),
                    clusterOptions = markerClusterOptions(radius = 15,
                                                          iconCreateFunction = JS("function (cluster) {    
     var childCount = cluster.getChildCount();  
@@ -117,15 +124,7 @@ leaflet(tor_df,
                    fillColor = ~pal(tor_df$LOG_DAM),
                    fillOpacity = 0.95,
                    labelOptions = labelOptions(textsize = "15px"),
-                   label = ~paste(paste("Property Damages: ",
-                                        paste0(paste0("$",
-                                                      prettyNum(tor_df$DAMAGE_PROPERTY,
-                                                                big.mark = ",",
-                                                                scientific = FALSE)),
-                                               ";")),
-                                  paste("Date: ",
-                                        tor_df$BEGIN_DATE),
-                                  sep = "   ")) %>%
+                   label = lapply(labelz, HTML)) %>%
   addLegend("bottomright",
             pal = pal,
             values = ~tor_df$LOG_DAM,
@@ -134,3 +133,4 @@ leaflet(tor_df,
 
 
 ```
+
