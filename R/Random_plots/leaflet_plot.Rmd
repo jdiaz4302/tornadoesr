@@ -1,15 +1,15 @@
 ---
-title: "Interactive Maps of Tornado-Induced Property Damage"
+title: "Interactive Maps of Tornado-Induced Property and Crop Damage"
 author: "Jeremy Diaz"
-date: "June 19, 2017"
+date: "June 22, 2017"
 output: html_document
 ---
 
-### The Data
+#### *The Data*
 
 The data used for this visualization comes from the NOAA-provided Storm Events Database. The data is subsetted to only tornado events since Jan 1, 1997 with complete (no NA's) entries for property damage, beginning time & date, and beginning location.
 
-### Map Details
+#### *Map Details*
 
 The value which appears on the grey cluster points is indicative of how many tornado events are being clustered into that point. Each grey cluster point will decompose into individual tornado events upon sufficient zooming; this can be done by scrolling the mouse wheel, clicking the interactive buttons, or by clicking on the cluster point of interest. Tornadoes that caused extreme damage appear yellow; tornadoes that caused intermediate damage appear green (more towards extreme) and blue (more towards no damage); and, tornadoes that caused no damage appear dark purple.
 
@@ -99,17 +99,17 @@ leaflet(tor_df,
 
 ```
 
-### Slightly Modified
+#### *Slightly Modified*
 
 The following is the same map as the above with two changes: 
 
 1. There are no clusters 
 2. Point sizes are scaled down for better large-scale viewing
 
-```{r interactive_map_no_clusters, echo = FALSE}
+```{r interactive_map_no_clusters, echo = FALSE, message = FALSE}
 
 
-# Make the interactive map with clusters
+# Make the interactive map without clusters
 leaflet(tor_df,
         width = "100%",
         padding = 3,
@@ -134,3 +134,117 @@ leaflet(tor_df,
 
 ```
 
+#### *For Crop Damage - Clustered*
+
+The data used in the crop damage maps are not exactly the same as those used in the property damage maps. The reason for this is because if you exclude missing values (NA's) for crop damage and property damage at the same time, the data set is approximately 13,000 rows. If you only exclude missing values for crop damage, then it is approximately 14,000; if you only exclude missing values for property damage, then it is approximately 20,000. You get the most data points this way.
+
+```{r crop_clustered, echo = FALSE, message = FALSE}
+
+
+# Import the data
+tor_df <- read.csv("~/earth-analytics/tornadoesr/data/raw/leaflet_viz_data_2.csv")
+
+
+# Make log-transformed property damage its own column
+tor_df$LOG_DAM <- log(tor_df$DAMAGE_CROPS + 1,
+                      base = exp(1))
+
+
+# Get the date on each event (without time)
+tor_df$BEGIN_DATE <- substring(tor_df$BEGIN_DATE_TIME, 1, 10)
+
+
+# Get the color a palette
+pal <- colorNumeric(palette = viridis(22),
+                    domain = tor_df$LOG_DAM)
+
+
+# No scientific "e+6" notation
+options("scipen" = 100)
+
+
+tor_df$DAM_LABEL <- paste("Crop Damage: ", paste0("$", prettyNum(tor_df$DAMAGE_CROPS,
+                                                                     big.mark = ",",
+                                                                     scientific = FALSE)))
+
+tor_df$DATE_LABEL <- paste("Date: ", tor_df$BEGIN_DATE)
+
+
+# Get the label
+labelz <- lapply(seq(nrow(tor_df)), function(i) {
+  paste0('<dd>', tor_df[i, "DAM_LABEL"], '</dd><dd>', 
+         tor_df[i, "DATE_LABEL"], '</dd>')
+})
+
+
+# Make the interactive map with clusters
+leaflet(tor_df,
+        width = "100%",
+        padding = 3,
+        options = leafletOptions(minZoom = 4)) %>%
+  addTiles() %>%
+  addProviderTiles(providers$CartoDB.DarkMatter) %>%
+  addCircleMarkers(lng = tor_df$BEGIN_LON,
+                   lat = tor_df$BEGIN_LAT, 
+                   stroke = FALSE,
+                   radius = 15,
+                   fill = TRUE,
+                   fillColor = ~pal(tor_df$LOG_DAM),
+                   fillOpacity = 1,
+                   labelOptions = labelOptions(textsize = "15px"),
+                   label = lapply(labelz, HTML),
+                   clusterOptions = markerClusterOptions(radius = 15,
+                                                         iconCreateFunction = JS("function (cluster) {    
+    var childCount = cluster.getChildCount();  
+    if (childCount < 100) {  
+      c = 'rgba(135, 135, 135, 1.0);'
+    } else if (childCount < 1000) {  
+      c = 'rgba(135, 135, 135, 1.0);'  
+    } else { 
+      c = 'rgba(135, 135, 135, 1.0);'  
+    }    
+    return new L.DivIcon({ html: '<div style=\"background-color:'+c+'\"><span>' + childCount + '</span></div>', className: 'marker-cluster', iconSize: new L.Point(40, 40) });
+
+  }"))) %>%
+  addLegend("bottomright",
+            pal = pal,
+            values = ~tor_df$LOG_DAM,
+            bins = c(0, 4, 8, 12, 16),
+            opacity = 1,
+            title = "Log-Transformed <br> Crop Damage <br> (US dollars + 1)")
+
+
+```
+
+#### *For Crop Damage - No Clusters*
+
+The same visualization as the above but with no clusters and with smaller points.
+
+```{r crop_no_clusters, echo = FALSE, message = FALSE}
+
+
+# Make the interactive map without clusters
+leaflet(tor_df,
+        width = "100%",
+        padding = 3,
+        options = leafletOptions(minZoom = 4)) %>%
+  addTiles() %>%
+  addProviderTiles(providers$CartoDB.DarkMatter) %>%
+  addCircleMarkers(lng = tor_df$BEGIN_LON,
+                   lat = tor_df$BEGIN_LAT, 
+                   stroke = FALSE,
+                   radius = 3,
+                   fill = TRUE,
+                   fillColor = ~pal(tor_df$LOG_DAM),
+                   fillOpacity = 0.95,
+                   labelOptions = labelOptions(textsize = "15px"),
+                   label = lapply(labelz, HTML)) %>%
+  addLegend("bottomright",
+            pal = pal,
+            values = ~tor_df$LOG_DAM,
+            bins = c(0, 4, 8, 12, 16),
+            opacity = 1,
+            title = "Log-Transformed <br> Crop Damage <br> (US dollars + 1)")
+
+
+```

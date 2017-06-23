@@ -3,6 +3,8 @@
 
 # Calling the data
 source("R/2_merge_data.R")
+# Only relevent for the leaflet plotting
+# library(readr)
 
 
 # Filter to only tornadoes
@@ -47,5 +49,9 @@ tor_df <- dplyr::select(tor_df, c(DEATHS_DIRECT,
 
 # Get rid of incomplete entries
 tor_df <- na.omit(tor_df)
+
+
+# Save for leaflet/markdown problems
+# write_csv(tor_df, "data/raw/leaflet_viz_data_3.csv")
 
 
