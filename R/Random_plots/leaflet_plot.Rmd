@@ -15,7 +15,7 @@ The value which appears on the grey cluster points is indicative of how many tor
 
 If you hover your mouse over a tornado event point, a label will display the property damage caused by that event and the date when the damage occurred.
 
-```{r interactive_map_plot_clusters, echo = FALSE, message = FALSE}
+```{r interactive_map_plot_clusters, echo = FALSE, message = FALSE, fig.cap = "**Figure 1**. Interactive map of tornado-induced property damage. Tornado events are clustered for the sake of clean viewing and to allow users to more easily find locations of interest."}
 
 
 # Packages
@@ -106,7 +106,7 @@ The following is the same map as the above with two changes:
 1. There are no clusters 
 2. Point sizes are scaled down for better large-scale viewing
 
-```{r interactive_map_no_clusters, echo = FALSE, message = FALSE}
+```{r interactive_map_no_clusters, echo = FALSE, message = FALSE, fig.cap = "**Figure 2**.Interactive map of tornado-induced property damage. Tornado events are not clustered in order to allow more informative large-scale views."}
 
 
 # Make the interactive map without clusters
@@ -138,7 +138,7 @@ leaflet(tor_df,
 
 The data used in the crop damage maps are not exactly the same as those used in the property damage maps. The reason for this is because if you exclude missing values (NA's) for crop damage and property damage at the same time, the data set is approximately 13,000 rows. If you only exclude missing values for crop damage, then it is approximately 14,000; if you only exclude missing values for property damage, then it is approximately 20,000. You get the most data points this way.
 
-```{r crop_clustered, echo = FALSE, message = FALSE}
+```{r crop_clustered, echo = FALSE, message = FALSE, fig.cap = "**Figure 3**. Interactive map of tornado-induced crop damage. Tornado events are clustered for the sake of clean viewing and to allow users to more easily find locations of interest."}
 
 
 # Import the data
@@ -220,7 +220,7 @@ leaflet(tor_df,
 
 The same visualization as the above but with no clusters and with smaller points.
 
-```{r crop_no_clusters, echo = FALSE, message = FALSE}
+```{r crop_no_clusters, echo = FALSE, message = FALSE, fig.cap = "**Figure 4**. Interactive map of tornado-induced crop damage. Tornado events are not clustered in order to allow more informative large-scale views."}
 
 
 # Make the interactive map without clusters
