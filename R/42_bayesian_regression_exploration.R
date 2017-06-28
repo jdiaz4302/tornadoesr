@@ -60,27 +60,93 @@ dam_model <- map(alist(DAMAGE_PROPERTY ~ dnorm(mu, sigma),
 
 # View coefficients
 precis(dam_model, digits = 4)
+# Shrub/scrub and Barren land proportions seem to be particularly unimportant
 
 
 # Sample average property damage values from the posterior for the training data
 mu <- link(dam_model)
 
 # Characterise those samples 
-mu_mean <- apply(mu, 2, mean)
+train_set$mu_mean <- apply(mu, 2, mean)
 
-# Add that to the df
-train_set$mu_mean <- mu_mean
 
 # Plot pred versus reality
 ggplot(train_set, aes(x = DAMAGE_PROPERTY,
                       y = mu_mean)) +
   geom_jitter(width = 0.05,
               height = 0.05,
-              alpha = 0.5,
+              alpha = 0.05,
               size = 2) +
   theme_bw() +
-  geom_abline(slope = 1, intercept = 0, col = "red", size = 1.5) +
+  geom_abline(slope = 1, intercept = 0, col = "red", size = 1) +
   scale_x_continuous(limits = c(-1, 3)) +
-  scale_y_continuous(limits = c(-1, 3))
-  
+  scale_y_continuous(limits = c(-1, 3)) +
+  coord_fixed(ratio = 1)
+
+
+# Import the cv data, curious about its loss value
+cv_set <- read.csv("data/raw/tor_cv_set_no_zeros_mob_home.csv")
+
+
+# Predict off of it
+mu_2 <- link(dam_model, data = cv_set)
+
+
+# Mean of the predictions
+cv_set$mu_mean <- apply(mu_cv, 2, mean)
+
+
+# Plot pred versus reality
+ggplot(cv_set, aes(x = DAMAGE_PROPERTY,
+                   y = mu_mean)) +
+  geom_jitter(width = 0.05,
+              height = 0.05,
+              alpha = 0.10,
+              size = 2) +
+  theme_bw() +
+  geom_abline(slope = 1, intercept = 0, col = "red", size = 1) +
+  scale_x_continuous(limits = c(-1, 3)) +
+  scale_y_continuous(limits = c(-1, 3)) +
+  coord_fixed(ratio = 1)
+
+
+# Get the loss value
+sum((cv_set$mu_mean - cv_set$DAMAGE_PROPERTY)^2)
+# And... nothing special: 280
+
+
+# What about normal old lm()
+dam_model_lm <- lm(DAMAGE_PROPERTY ~ 1 + DURATION_SECONDS + BEGIN_LAT + BEGIN_LON +
+                     TOR_LENGTH + TOR_WIDTH + YEAR + OPEN_WATER_PROP + DEV_OPEN_PROP +
+                     DEV_LOW_PROP + DEV_MED_PROP + DEV_HIGH_PROP + DECID_FOREST_PROP +
+                     EVERGR_FOREST_PROP + MIXED_FOREST_PROP + SHRUB_SCRUB_PROP +
+                     GRASS_LAND_PROP + PASTURE_HAY_PROP + CULT_CROPS_PROP +
+                     WOOD_WETLAND_PROP + HERB_WETLAND_PROP + BARREN_LAND_PROP +
+                     INCOME + TOR_AREA + TOT_DEV_INT + TOT_WOOD_AREA +
+                     WOOD_DEV_INT + EXP_INC_AREA + DAY_OF_YEAR + STATE_RANK +
+                     MOB_HOM_COUNT + TIME + MONTH_MEAN, data = train_set)
+
+
+# Get predictions from that model off the cv_set
+cv_set$pred_dam <- predict.lm(dam_model_lm, cv_set)
+
+
+# Plot pred versus reality
+ggplot(cv_set, aes(x = DAMAGE_PROPERTY,
+                   y = pred_dam)) +
+  geom_jitter(width = 0.05,
+              height = 0.05,
+              alpha = 0.10,
+              size = 2) +
+  theme_bw() +
+  geom_abline(slope = 1, intercept = 0, col = "red", size = 1) +
+  scale_x_continuous(limits = c(-1, 3)) +
+  scale_y_continuous(limits = c(-1, 3)) +
+  coord_fixed(ratio = 1)
+
+
+# Get the loss value
+sum((cv_set$pred_dam - cv_set$DAMAGE_PROPERTY)^2)
+# 280...
+
 
