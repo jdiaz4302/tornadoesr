@@ -150,3 +150,6 @@ sum((cv_set$pred_dam - cv_set$DAMAGE_PROPERTY)^2)
 # 280...
 
 
+# View the coefficients
+summary(dam_model_lm)
+
