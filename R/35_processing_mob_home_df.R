@@ -11,14 +11,6 @@ library(readr)
 tor_df <- read.csv("data/raw/Tor_data_with_mob_home.csv")
 
 
-# Get rid of NA's
-nrow(tor_df)
-# 19688
-nrow(na.omit(tor_df))
-# 19666 - insignificant loss
-tor_df <- na.omit(tor_df)
-
-
 # Functions that need defining
 # Define a simple mean normalization function
 mean_normalize <- function(to_normalize){
@@ -194,7 +186,7 @@ tor_LC_df$YEAR <- mean_normalize(tor_LC_df$YEAR)
 
 
 # Process mobile home data
-tor_LC_df$MOB_HOM_COUNT <- mean_norm_log_xform(tor_LC_df$MOB_HOM_COUNT)
+tor_LC_df$MOB_HOM_DENS <- mean_norm_log_xform_prop(tor_LC_df$MOB_HOM_DENS)
 
 
 # Take a look at all the distributions
