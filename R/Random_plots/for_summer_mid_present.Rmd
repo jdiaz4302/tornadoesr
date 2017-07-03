@@ -1,0 +1,91 @@
+---
+title: "An Interactive Map of Tornado-Induced Property Damage"
+author: "Jeremy Diaz"
+date: "June 22, 2017"
+output: html_document
+---
+
+```{r interactive_map_plot_clusters, echo = FALSE, message = FALSE, fig.cap = "**Figure 1**. Interactive map of tornado-induced property damage. Data is from NOAA's Storm Events Database, excluding points that have incomplete entries for property damage, location, and/or date/time. Events occuring before 1997 are not included."}
+
+
+# Packages
+library(leaflet)
+library(viridis)
+library(mapview)
+library(htmltools)
+
+
+# Import the data
+tor_df <- read.csv("~/earth-analytics/tornadoesr/data/raw/leaflet_viz_data.csv")
+
+
+# Make log-transformed property damage its own column
+tor_df$LOG_DAM <- log(tor_df$DAMAGE_PROPERTY + 1,
+                      base = exp(1))
+
+
+# Get the date on each event (without time)
+tor_df$BEGIN_DATE <- substring(tor_df$BEGIN_DATE_TIME, 1, 10)
+
+
+# Get the color a palette
+pal <- colorNumeric(palette = viridis(22),
+                    domain = tor_df$LOG_DAM)
+
+
+# No scientific "e+6" notation
+options("scipen" = 100)
+
+
+tor_df$DAM_LABEL <- paste("Property Damage: ", paste0("$", prettyNum(tor_df$DAMAGE_PROPERTY,
+                                                                     big.mark = ",",
+                                                                     scientific = FALSE)))
+
+tor_df$DATE_LABEL <- paste("Date: ", tor_df$BEGIN_DATE)
+
+
+# Get the label
+labelz <- lapply(seq(nrow(tor_df)), function(i) {
+  paste0('<dd>', tor_df[i, "DAM_LABEL"], '</dd><dd>', 
+         tor_df[i, "DATE_LABEL"], '</dd>')
+})
+
+
+# Make the interactive map with clusters
+leaflet(tor_df,
+        width = "100%",
+        padding = 3,
+        options = leafletOptions(minZoom = 4)) %>%
+  addTiles() %>%
+  addProviderTiles(providers$CartoDB.DarkMatter) %>%
+  addCircleMarkers(lng = tor_df$BEGIN_LON,
+                   lat = tor_df$BEGIN_LAT, 
+                   stroke = FALSE,
+                   radius = 15,
+                   fill = TRUE,
+                   fillColor = ~pal(tor_df$LOG_DAM),
+                   fillOpacity = 1,
+                   labelOptions = labelOptions(textsize = "15px"),
+                   label = lapply(labelz, HTML),
+                   clusterOptions = markerClusterOptions(radius = 15,
+                                                         iconCreateFunction = JS("function (cluster) {    
+    var childCount = cluster.getChildCount();  
+    if (childCount < 100) {  
+      c = 'rgba(135, 135, 135, 1.0);'
+    } else if (childCount < 1000) {  
+      c = 'rgba(135, 135, 135, 1.0);'  
+    } else { 
+      c = 'rgba(135, 135, 135, 1.0);'  
+    }    
+    return new L.DivIcon({ html: '<div style=\"background-color:'+c+'\"><span>' + childCount + '</span></div>', className: 'marker-cluster', iconSize: new L.Point(40, 40) });
+
+  }"))) %>%
+  addLegend("bottomright",
+            pal = pal,
+            values = ~tor_df$LOG_DAM,
+            opacity = 1,
+            title = "Log-Transformed <br> Property Damage <br> (US dollars + 1)")
+
+
+```
+
