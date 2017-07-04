@@ -61,25 +61,12 @@ leaflet(tor_df,
   addCircleMarkers(lng = tor_df$BEGIN_LON,
                    lat = tor_df$BEGIN_LAT, 
                    stroke = FALSE,
-                   radius = 15,
+                   radius = 3,
                    fill = TRUE,
                    fillColor = ~pal(tor_df$LOG_DAM),
-                   fillOpacity = 1,
+                   fillOpacity = 0.95,
                    labelOptions = labelOptions(textsize = "15px"),
-                   label = lapply(labelz, HTML),
-                   clusterOptions = markerClusterOptions(radius = 15,
-                                                         iconCreateFunction = JS("function (cluster) {    
-    var childCount = cluster.getChildCount();  
-    if (childCount < 100) {  
-      c = 'rgba(135, 135, 135, 1.0);'
-    } else if (childCount < 1000) {  
-      c = 'rgba(135, 135, 135, 1.0);'  
-    } else { 
-      c = 'rgba(135, 135, 135, 1.0);'  
-    }    
-    return new L.DivIcon({ html: '<div style=\"background-color:'+c+'\"><span>' + childCount + '</span></div>', className: 'marker-cluster', iconSize: new L.Point(40, 40) });
-
-  }"))) %>%
+                   label = lapply(labelz, HTML)) %>%
   addLegend("bottomright",
             pal = pal,
             values = ~tor_df$LOG_DAM,
