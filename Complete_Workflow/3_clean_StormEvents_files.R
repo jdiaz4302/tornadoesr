@@ -156,6 +156,11 @@ tor_df <- dplyr::select(tor_df, c(DAMAGE_PROPERTY,
                                   CZ_NAME,
                                   STATE))
 
+
+# Remove NAs
+tor_df <- na.omit(tor_df)
+
+
 # The nonsequential indices are undesirable (to me)
 rownames(tor_df) <- NULL
 
