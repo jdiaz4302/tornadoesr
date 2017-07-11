@@ -7,7 +7,7 @@ library(ggplot2)
 
 
 # Calling the data
-source("R/3_format_for_prop_dam_visualizations.R")
+source("R/Random_plots/3_format_for_prop_dam_visualizations.R")
 
 
 # Get property damage per year
@@ -28,11 +28,11 @@ ggplot(DPY,
            y = log(Damage))) +
   geom_area(fill = "red",
             alpha = 0.25) +
-  geom_line(lwd = 1.75,
-            colour = "grey45") +
-  scale_y_continuous(limits = c(0,
-                                25)) +
+  geom_line(lwd = 1.25,
+            col = "grey65") +
+  coord_cartesian(ylim = c(18, 24)) +
   scale_x_continuous(breaks = 1997:2016) +
+  scale_y_continuous(minor_breaks = seq(1, 24, 1)) +
   geom_hline(aes(yintercept = 19),
              lty = 2,
              lwd = 1.5,
@@ -41,7 +41,7 @@ ggplot(DPY,
              lty = 2,
              lwd = 1.5,
              colour = "black") +
-  geom_point(size = 5.25,
+  geom_point(size = 4,
              colour = "red4") +
   geom_text(aes(2001,
                 23,
