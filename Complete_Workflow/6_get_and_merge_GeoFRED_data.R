@@ -64,11 +64,6 @@ tor_LC_df$INCOME <- county_income_reshaped$value[match(tor_county_state_year_tog
                                                        county_income_reshaped$to_match_by)]
 
 
-# Get rid of the newly-created state abbreviation variable
-tor_LC_df <- dplyr::select(tor_LC_df,
-                           -state_abbrev)
-
-
 # Remove NA'd values, less than 1% of the match resulted in a NA
 tor_LC_df <- na.omit(tor_LC_df)
 
