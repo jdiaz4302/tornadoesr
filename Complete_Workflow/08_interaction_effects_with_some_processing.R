@@ -110,6 +110,6 @@ tor_df <- na.omit(tor_df)
 
 
 # Save it
-# write_csv(tor_df, "data/raw/Tor_data_with_interact_effects.csv")
+# write_csv(tor_df, "data/raw/tor_data_with_interact_effects.csv")
 
 
