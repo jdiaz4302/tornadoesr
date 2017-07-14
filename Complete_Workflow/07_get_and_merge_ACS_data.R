@@ -8,7 +8,7 @@ library(readr)
 
 
 # Import the tornado data - with income and NLCD
-tor_df <- read.csv("enter your census api")
+tor_df <- read.csv("data/raw/tor_data_with_income.csv")
 
 
 # Import Census-provided land area per county data - gonna get densities
@@ -121,7 +121,7 @@ land_area_county_state_year <- select(land_area,
 
 
 # Set census API
-census_api_key("aa9d1fdffa292b77837177fa4e821971a207a6d0")
+census_api_key("ENTER YOUR CENSUS KEY")
 
 
 # Finding variable of interest
