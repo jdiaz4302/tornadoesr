@@ -2,7 +2,7 @@
 
 
 # Calling the data
-source("Complete_Workflow/02_merge_StormEvents_files.R")
+source("Complete_Workflow/02_combine_StormEvents_files.R")
 
 
 # Filter to only tornadoes
@@ -64,6 +64,38 @@ tor_df <- filter(tor_df,
 tor_df$BEGIN_DATE_TIME <- as.numeric(tor_df$BEGIN_DATE_TIME)
 
 
+######################### Get Multivortex Info ####################
+###################################################################
+# For easier text searching, make all capital letters
+tor_df$EVENT_NARRATIVE <- toupper(tor_df$EVENT_NARRATIVE)
+
+# Different ways to search for multivortex tornadoes
+tor_df$proxy1 <- grepl("MULTIPLE VORTEX", tor_df$EVENT_NARRATIVE)
+
+tor_df$proxy2 <- grepl("MULTIPLE-VORTEX", tor_df$EVENT_NARRATIVE)
+
+tor_df$proxy3 <- grepl("MULTI-VORTEX", tor_df$EVENT_NARRATIVE)
+
+tor_df$proxy4 <- grepl("MULTIVORTEX", tor_df$EVENT_NARRATIVE)
+
+tor_df$proxy5 <- grepl("MULTIPLE VORTICES", tor_df$EVENT_NARRATIVE)
+
+tor_df$proxy6 <- grepl("MULTIPLE-VORTICES", tor_df$EVENT_NARRATIVE)
+
+# If any search yielded a find, then this new variable will be > 0
+tor_df$MULTI_VORT_IND <- tor_df$proxy1 + tor_df$proxy2 + tor_df$proxy3 +
+  tor_df$proxy4 + tor_df$proxy5 + tor_df$proxy6
+
+# If there was a find, the event was a multivortex tornado
+tor_df$MULTI_VORT_IND <- tor_df$MULTI_VORT_IND > 0
+
+tor_df[tor_df$EVENT_ID == 296617, ]$MULTI_VORT_IND <- TRUE
+
+tor_df$MULTI_VORT_IND <- as.numeric(tor_df$MULTI_VORT_IND)
+###################################################################
+########################### DONE ##################################
+
+
 # Keeping only variables of interest
 tor_df <- dplyr::select(tor_df, c(DAMAGE_PROPERTY,
                                   DURATION_SECONDS,
@@ -75,7 +107,8 @@ tor_df <- dplyr::select(tor_df, c(DAMAGE_PROPERTY,
                                   EVENT_ID,
                                   YEAR,
                                   CZ_NAME,
-                                  STATE))  
+                                  STATE,
+                                  MULTI_VORT_IND))  
 
 
 # PyTorch really doesn't like NA values
@@ -154,7 +187,8 @@ tor_df <- dplyr::select(tor_df, c(DAMAGE_PROPERTY,
                                   EVENT_ID,
                                   YEAR,   
                                   CZ_NAME,
-                                  STATE))
+                                  STATE,
+                                  MULTI_VORT_IND))
 
 
 # Remove NAs
