@@ -14,12 +14,14 @@ library(ggplot2)
 
 
 # Get all possible longitude values
-LON <- seq(-125, -66)
+LON <- seq(from = -125,
+           to = -66,
+           by = 0.25)
 
 
 # Iteratively add each possible latitude value in an
 # Adjacent column to the longitude values
-for (i in seq(23, 50)) {
+for (i in seq(from = 23, to = 50, by = 0.25)) {
   
   if (i == 23) {
     
@@ -342,7 +344,7 @@ land_area_county_state_year <- select(land_area,
 
 
 # Set census API
-census_api_key("enter your census key here")
+census_api_key("enter your census key")
 
 
 # Writing a function to get ACS data of interest
@@ -770,10 +772,41 @@ grid_with_LC <- dplyr::select(grid_with_LC,
 
 
 # Get the columns in the same order as the model data
-final_grid_df <- grid_with_LC[, c(22, 2, 1, 23, 24, 18, 27, 9, 10,
-                                  11, 12, 13, 14, 17, 3, 4, 5, 6,
-                                  15, 16, 7, 8, 19, 20, 21, 28, 29,
-                                  30, 31, 32, 34, 33, 26, 25)]
+final_grid_df <- dplyr::select(grid_with_LC,
+                               c(DURATION_SECONDS,
+                                 BEGIN_LAT,
+                                 BEGIN_LON,
+                                 TOR_LENGTH,
+                                 TOR_WIDTH,
+                                 YEAR,
+                                 MULTI_VORT_IND,
+                                 OPEN_WATER_PROP,
+                                 DEV_OPEN_PROP,
+                                 DEV_LOW_PROP,
+                                 DEV_MED_PROP,
+                                 DEV_HIGH_PROP,
+                                 BARREN_LAND_PROP,
+                                 DECID_FOREST_PROP,
+                                 EVERGR_FOREST_PROP,
+                                 MIXED_FOREST_PROP,
+                                 SHRUB_SCRUB_PROP,
+                                 GRASS_LAND_PROP,
+                                 PASTURE_HAY_PROP,
+                                 CULT_CROPS_PROP,
+                                 WOOD_WETLAND_PROP,
+                                 HERB_WETLAND_PROP,
+                                 INCOME,
+                                 MOB_HOME_DENS,
+                                 POP_DENS,
+                                 TOR_AREA,
+                                 TOT_DEV_INT,
+                                 TOT_WOOD_AREA,
+                                 WOOD_DEV_INT,
+                                 EXP_INC_AREA,
+                                 DAY_OF_YEAR,
+                                 MONTH,
+                                 STATE_RANK,
+                                 TIME))
 
 
 # Save the gridded data.frame so we can predict off it in PyTorch

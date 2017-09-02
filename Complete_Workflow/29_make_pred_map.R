@@ -65,7 +65,7 @@ ggplot(data = grid_with_pred) +
   geom_point(aes(x = grid_with_pred$BEGIN_LON,
                  y = grid_with_pred$BEGIN_LAT,
                  col = grid_with_pred$DAMAGE_PROPERTY),
-             size = 1) +
+             size = 1/2) +
   facet_wrap(~MONTH, ncol = 3) +
   viridis::scale_color_viridis('Predicted, Log-scale\nProperty Damage\n(US dollars + 1)') +
   theme(plot.title = element_text(size = 19, hjust = 0.5),
