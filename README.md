@@ -9,4 +9,4 @@ This repository roughly serves as the documentation to my internship project's w
 
 This project aims to predict dollar-amount, tornado-induced property damage based on variables that you can know before a tornado event, variables that describe the tornado event, and both of those sets of variables combined. The predictive models consist of various multivariate regressions and artificial neural networks made in PyTorch, a deep learning framework.
 
-
+[Some interactive maps](http://htmlpreview.github.com/?https://github.com/jdiaz4302/tornadoesr/blob/master/interactive_model_maps.html)
