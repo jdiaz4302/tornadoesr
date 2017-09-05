@@ -70,7 +70,6 @@ best_of_metrics <- dplyr::select(best_of_metrics, -min_MSE)
 
 
 
-
 # Get all the files from the directory
 files <- list.files('Complete_Workflow/')
 
@@ -136,9 +135,53 @@ log_mean <- mean(log(not_processed_df$DAMAGE_PROPERTY + 1))
 log_sd <- sd(log(not_processed_df$DAMAGE_PROPERTY + 1))
 
 
-# Undo the mean normalization
-predictions_df$predicted_values <- predictions_df$predicted_values*log_sd + log_mean
-predictions_df$true_values <- predictions_df$true_values*log_sd + log_mean
+# Undo the mean normalization and get them in log10 scale
+predictions_df$predicted_values <- ((predictions_df$predicted_values * log_sd) + log_mean) %>%
+  exp() %>%
+  log10()
+
+predictions_df$true_values <- ((predictions_df$true_values * log_sd) + log_mean) %>%
+  exp() %>%
+  log10()
+
+
+# Get better labels for the facetting
+predictions_df$label <- ifelse(predictions_df$notebook_number == 12,
+                                'Before. with Zeros',
+                                ifelse(predictions_df$notebook_number == 13,
+                                       'Storm Character. with Zeros',
+                                       ifelse(predictions_df$notebook_number == 14,
+                                              'Holistic with Zeros',
+                                              ifelse(predictions_df$notebook_number == 15,
+                                                     'Before. without Zeros',
+                                                     ifelse(predictions_df$notebook_number == 16,
+                                                            'Storm Character. without Zeros',
+                                                            ifelse(predictions_df$notebook_number == 17,
+                                                                   'Holistic without Zeros',
+                                                                   ifelse(predictions_df$notebook_number == 18,
+                                                                          'Deep Models',
+                                                                          ifelse(predictions_df$notebook_number == 19,
+                                                                                 'Wide Models',
+                                                                                 ifelse(predictions_df$notebook_number == 20,
+                                                                                        'Wide Once Reg.',
+                                                                                        ifelse(predictions_df$notebook_number == 21,
+                                                                                               'Wide Twice Reg',
+                                                                                               ifelse(predictions_df$notebook_number == 22,
+                                                                                                      'Deep ELU',
+                                                                                                      ifelse(predictions_df$notebook_number == 23,
+                                                                                                             'Wide ELU',
+                                                                                                             ifelse(predictions_df$notebook_number == 24,
+                                                                                                                    'Descending ELU',
+                                                                                                                    'Error'))))))))))))) %>%
+  as.factor()
+
+
+# Get the levels in a more appealing order
+predictions_df$label <- factor(predictions_df$label,
+                               levels(predictions_df$label)[c(1, 8, 6, 2,
+                                                              9, 7, 4, 11,
+                                                              12, 13, 5, 3,
+                                                              10)])
 
 
 # Plot the predicted versus observed values for the best model from each notebook
@@ -147,16 +190,18 @@ ggplot(predictions_df,
            y = predicted_values)) +
   geom_point(pch = 21,
              size = 0.9) +
-  facet_wrap(~notebook_number) +
-  scale_x_continuous(limits = c(-2, 22)) +
-  scale_y_continuous(limits = c(-2, 22)) +
+  facet_wrap(~label, ncol = 4) +
+  scale_x_continuous(lim = c(-1, 10),
+                     breaks = c(0, 2, 4, 6, 8, 10)) +
+  scale_y_continuous(lim = c(-1, 10),
+                     breaks = c(0, 2, 4, 6, 8, 10)) +
   geom_abline(intercept = 0,
               slope = 1) +
   theme_bw() +
   labs(x = 'Observed Value',
        y = 'Predicted Value',
        title = 'Cross-Validation Set Performance',
-       subtitle = 'On Log-Transformed US dollars + 1') +
+       subtitle = 'Units = Magnitude of US dollars') +
   theme(aspect.ratio = 4/5,
         plot.title = element_text(hjust = 0.5, size = 17),
         plot.subtitle = element_text(hjust = 0.5, size = 12),
@@ -179,22 +224,58 @@ param_plot_df$model_type <- ifelse(param_plot_df$Number.of.Parameters > 100,
                                    'Neural Network', 'Multivariate Regression')
 
 
+# Get better labels
+param_plot_df$label <- ifelse(param_plot_df$notebook_id == 17,
+                              'Holistic without Zeros',
+                              ifelse(param_plot_df$notebook_id == 18,
+                                     'Deep Models',
+                                     ifelse(param_plot_df$notebook_id == 19,
+                                            'Wide Models',
+                                            ifelse(param_plot_df$notebook_id == 22,
+                                                   'Deep ELU',
+                                                   ifelse(param_plot_df$notebook_id == 23,
+                                                          'Wide ELU',
+                                                          ifelse(param_plot_df$notebook_id == 24,
+                                                                 'Descending ELU',
+                                                                 'Error')))))) %>%
+  as.factor()
+
+
+# Get proper ordering of labels
+param_plot_df$label <- factor(param_plot_df$label,
+                              levels(param_plot_df$label)[c(4, 2, 6,
+                                                            3, 1, 5)])
+
+
+# Get annotation (to label overfitting)
+ann_text <- data.frame(Number.of.Parameters = 2000,
+                       Mean.Squared.Error = 0.1,
+                       model_type = "irrelevant",
+                       label = factor('Wide Models',
+                                      levels = levels(param_plot_df$label)))
+
+
 # Plot MSE by number of parameters for each notebook
 ggplot(param_plot_df,
        aes(x = Number.of.Parameters,
            y = Mean.Squared.Error,
            shape = model_type)) +
-  facet_wrap(~notebook_id,
-             scale = 'free') +
+  facet_wrap(~label,
+             scale = 'free',
+             ncol = 3) +
   geom_point(size = 2) +
   geom_line() +
   theme_bw() +
   labs(x = 'Number of Parameters',
        y = 'Mean Squared Error',
-       title = 'How does Complexity affect Performance?') +
+       title = 'How does Complexity affect Performance?',
+       shape = 'Model Type') +
   theme(aspect.ratio = 1,
         plot.title = element_text(hjust = 0.5, size = 16),
-        axis.title = element_text(size = 13)) 
+        axis.title = element_text(size = 13)) +
+  geom_text(data = ann_text,
+            label = "Overfitting",
+            size = 3.5)
 
 
 # Plot far-end MSE by number of parameters for each notebook
@@ -202,12 +283,13 @@ ggplot(param_plot_df,
        aes(x = Number.of.Parameters,
            y = Mean.Squared.Error.Over.1M,
            shape = model_type)) +
-  facet_wrap(~notebook_id,
+  facet_wrap(~label,
              scale = 'free') +
   labs(x = 'Number of Parameters',
        y = 'Mean Squared Error',
        title = 'How does Complexity affect Performance on Extreme Events?',
-       subtitle = 'Extreme Events = Tornadoes that caused > $1,000,000') +
+       subtitle = 'Extreme Events = Tornadoes that caused > $1,000,000',
+       shape = 'Model Type') +
   geom_point(size = 2) +
   geom_line() +
   theme_bw() +
@@ -269,35 +351,123 @@ resid_sum_square <- sum(best_models_test_perf$resid_sum_square)
 R_squared <- 1 - (resid_sum_square / tot_sum_square)
 
 
-# Undo the mean normalization
-best_models_test_perf$true_values <- best_models_test_perf$true_values*log_sd + log_mean
-best_models_test_perf$predicted_values <- best_models_test_perf$predicted_values*log_sd + log_mean
+# Undo the mean normalization and get in log 10 scale
+best_models_test_perf$true_values <- ((best_models_test_perf$true_values * log_sd) + log_mean) %>%
+  exp() %>%
+  log10()
+
+best_models_test_perf$predicted_values <- ((best_models_test_perf$predicted_values*log_sd) + log_mean) %>%
+  exp() %>%
+  log10()
 
 
 # Plot the predicted versus true for the best model's test set performance
 ggplot(best_models_test_perf,
        aes(x = true_values,
            y = predicted_values)) +
-  geom_point(size = 2,
-             alpha = .5) +
-  scale_x_continuous(limits = c(1.0952, 23)) +
-  scale_y_continuous(limits = c(1.0952, 23)) +
   geom_abline(intercept = 0,
               slope = 1) +
+  geom_point(size = 3,
+             alpha = .5) +
+  scale_x_continuous(lim = c(0, 10),
+                     breaks = c(0, 2, 4, 6, 8, 10)) +
+  scale_y_continuous(lim = c(0, 10),
+                     breaks = c(0, 2, 4, 6, 8, 10)) +
   theme_bw() +
   labs(x = 'Observed Values',
        y = 'Predicted Values',
        title = 'Test Set Performance',
-       subtitle = 'On Log-Transformed US dollars + 1') +
+       subtitle = 'Units = Magnitude of US dollars') +
   theme(aspect.ratio = 8/9,
         plot.title = element_text(hjust = 0.5, size = 15),
         plot.subtitle = element_text(hjust = 0.5, size = 11),
         axis.title = element_text(hjust = 0.5, size = 13)) +
-  annotate('text', x = 3, y = 23,
+  annotate('text', x = 0.4, y = 10,
            label = paste0('R^2: ', as.character(R_squared)),
            parse = TRUE) +
-  annotate('text', x = 3.5, y = 22,
+  annotate('text', x = 0.4, y = 9.25,
            label = paste0('MSE: ', as.character.Date(test_MSE)),
            parse = TRUE)
+
+
+# Make a table
+# Renaming some columns
+colnames(best_of_metrics) <- c("X",
+                               "Number of Parameters",
+                               "R-squared",
+                               "Mean Squared Error",
+                               "Mean Squared Error Over 1M",
+                               "notebook_id",
+                               "model_id")
+
+
+# Give better labels
+best_of_metrics$Label <- ifelse(best_of_metrics$notebook_id == 12,
+                                'Before. with Zeros',
+                                ifelse(best_of_metrics$notebook_id == 13,
+                                       'Storm Character. with Zeros',
+                                       ifelse(best_of_metrics$notebook_id == 14,
+                                              'Holistic with Zeros',
+                                              ifelse(best_of_metrics$notebook_id == 15,
+                                                     'Before. without Zeros',
+                                                     ifelse(best_of_metrics$notebook_id == 16,
+                                                            'Storm Character. without Zeros',
+                                                            ifelse(best_of_metrics$notebook_id == 17,
+                                                                   'Holistic without Zeros',
+                                                                   ifelse(best_of_metrics$notebook_id == 18,
+                                                                          'Deep Models',
+                                                                          ifelse(best_of_metrics$notebook_id == 19,
+                                                                                 'Wide Models',
+                                                                                 ifelse(best_of_metrics$notebook_id == 20,
+                                                                                        'Wide Once Reg.',
+                                                                                        ifelse(best_of_metrics$notebook_id == 21,
+                                                                                               'Wide Twice Reg',
+                                                                                               ifelse(best_of_metrics$notebook_id == 22,
+                                                                                                      'Deep ELU',
+                                                                                                      ifelse(best_of_metrics$notebook_id == 23,
+                                                                                                             'Wide ELU',
+                                                                                                             ifelse(best_of_metrics$notebook_id == 24,
+                                                                                                                    'Descending ELU',
+                                                                                                                    'Error'))))))))))))) %>%
+  as.factor()
+
+
+# Remove irrelevant information
+best_of_metrics <- dplyr::select(best_of_metrics,
+                                 -c(X,
+                                    notebook_id,
+                                    model_id))
+
+
+# Rounding the numbers
+best_of_metrics$`R-squared` <- signif(best_of_metrics$`R-squared`,
+                                      digits = 2)
+
+best_of_metrics$`Mean Squared Error` <- signif(best_of_metrics$`Mean Squared Error`,
+                                               digits = 2)
+
+best_of_metrics$`Mean Squared Error Over 1M` <- signif(best_of_metrics$`Mean Squared Error Over 1M`,
+                                                       digits = 2)
+
+
+# Better order of variables
+best_of_metrics <- dplyr::select(best_of_metrics,
+                                 c(Label,
+                                   `Mean Squared Error`,
+                                   `R-squared`,
+                                   `Mean Squared Error Over 1M`,
+                                   `Number of Parameters`))
+
+
+# Order the table
+best_of_metrics <- best_of_metrics[order(-best_of_metrics$`Mean Squared Error`),]
+
+
+# Plot it
+dev.off()
+
+grid.table(best_of_metrics,
+           rows = NULL,
+           theme = ttheme_minimal())
 
 
