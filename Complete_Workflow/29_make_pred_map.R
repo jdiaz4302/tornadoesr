@@ -25,11 +25,14 @@ grid_with_pred$BEGIN_LON <- grid_with_pred$BEGIN_LON * sd(tor_df$BEGIN_LON) +
   mean(tor_df$BEGIN_LON)
 
 
-# Undo only the mean normalization on property damage, makes for better plots
-grid_with_pred$DAMAGE_PROPERTY <- grid_with_pred$DAMAGE_PROPERTY * sd(log(tor_df$DAMAGE_PROPERTY + 1,
+# Undo only the mean normalization on property damage, exponentiate,
+# Then convert to log10 scale
+grid_with_pred$DAMAGE_PROPERTY <- (grid_with_pred$DAMAGE_PROPERTY * sd(log(tor_df$DAMAGE_PROPERTY + 1,
                                                                           base = exp(1))) +
   mean(log(tor_df$DAMAGE_PROPERTY + 1,
-           base = exp(1)))
+           base = exp(1)))) %>%
+  exp() %>%
+  log10()
  
  
 # Have the gridded points as a SpatialPointsDataFrame
@@ -65,7 +68,9 @@ ggplot(data = grid_with_pred) +
   geom_point(aes(x = grid_with_pred$BEGIN_LON,
                  y = grid_with_pred$BEGIN_LAT,
                  col = grid_with_pred$DAMAGE_PROPERTY),
-             size = 1/2) +
+             size = 1,
+             pch = 15,
+             alpha = 0.95) +
   facet_wrap(~MONTH, ncol = 3) +
   viridis::scale_color_viridis('Predicted, Log-scale\nProperty Damage\n(US dollars + 1)') +
   theme(plot.title = element_text(size = 19, hjust = 0.5),
@@ -80,31 +85,6 @@ ggplot(data = grid_with_pred) +
         panel.background = element_rect(fill = 'black'),
         strip.background = element_rect(fill = 'black'),
         strip.text = element_text(colour = 'grey80')) +
-  labs(title = 'Maps of 2018 Tornado-Induced Property Damage Predictions',
-       subtitle = 'Derived from the Best-Performing Neural Network')
-
-
-# Plot them all together
-ggplot(data = grid_with_pred) +
-  theme_bw() +
-  geom_polygon(data = us_shape,
-               aes(long, lat, group = group),
-               col = 'grey80', fill = 'black') +
-  geom_jitter(aes(x = grid_with_pred$BEGIN_LON,
-                  y = grid_with_pred$BEGIN_LAT,
-                  col = grid_with_pred$DAMAGE_PROPERTY),
-             size = 2) +
-  viridis::scale_color_viridis('Predicted, Log-scale\nProperty Damage\n(US dollars + 1)') +
-  theme(plot.title = element_text(size = 19, hjust = 0.5),
-        plot.subtitle = element_text(size = 14, hjust = 0.5),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
-        aspect.ratio = 9/16,
-        panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        panel.border = element_blank(),
-        axis.ticks = element_blank(),
-        panel.background = element_rect(fill = 'black')) +
   labs(title = 'Maps of 2018 Tornado-Induced Property Damage Predictions',
        subtitle = 'Derived from the Best-Performing Neural Network')
 
