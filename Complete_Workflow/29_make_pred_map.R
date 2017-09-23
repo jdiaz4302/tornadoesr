@@ -59,6 +59,13 @@ grid_with_pred$MONTH <- as.factor(grid_with_pred$MONTH)
 levels(grid_with_pred$MONTH) <- paste(month.name, '15th')
 
 
+# Get cities data
+cities_df <- read.csv('https://raw.githubusercontent.com/plotly/datasets/master/2014_us_cities.csv')
+
+cities_df <- dplyr::filter(cities_df,
+                           pop > 100000)
+
+
 # Plot a map for each month
 ggplot(data = grid_with_pred) +
   theme_bw() +
@@ -86,6 +93,12 @@ ggplot(data = grid_with_pred) +
         strip.background = element_rect(fill = 'black'),
         strip.text = element_text(colour = 'grey80')) +
   labs(title = 'Maps of 2018 Tornado-Induced Property Damage Predictions',
-       subtitle = 'Derived from the Best-Performing Neural Network')
+       subtitle = 'Derived from the Best-Performing Neural Network') +
+  geom_point(data = cities_df,
+             aes(x = lon,
+                 y = lat),
+             col = 'black',
+             pch = 16,
+             size = 1/4)
 
 
