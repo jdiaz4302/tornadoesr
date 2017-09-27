@@ -206,7 +206,9 @@ ggplot(predictions_df,
   theme(aspect.ratio = 4/5,
         plot.title = element_text(hjust = 0.5, size = 17),
         plot.subtitle = element_text(hjust = 0.5, size = 12),
-        axis.title = element_text(size = 15))
+        axis.title = element_text(size = 15),
+        strip.background = element_blank(),
+        panel.border = element_rect(colour = "black"))
 
 
 # Filter out the non-holistic models
@@ -408,13 +410,13 @@ best_of_metrics$Label <- ifelse(best_of_metrics$notebook_id == 12,
                                 ifelse(best_of_metrics$notebook_id == 13,
                                        'Storm Character. with Zeros',
                                        ifelse(best_of_metrics$notebook_id == 14,
-                                              'Holistic with Zeros',
+                                              'Combined with Zeros',
                                               ifelse(best_of_metrics$notebook_id == 15,
                                                      'Before. without Zeros',
                                                      ifelse(best_of_metrics$notebook_id == 16,
                                                             'Storm Character. without Zeros',
                                                             ifelse(best_of_metrics$notebook_id == 17,
-                                                                   'Holistic without Zeros',
+                                                                   'Combined without Zeros',
                                                                    ifelse(best_of_metrics$notebook_id == 18,
                                                                           'Deep Models',
                                                                           ifelse(best_of_metrics$notebook_id == 19,
