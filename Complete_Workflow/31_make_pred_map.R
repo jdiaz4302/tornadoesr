@@ -10,7 +10,7 @@ library(ggplot2)
 
 # Import the grid points
 # And remove the pandas-induced index column
-grid_with_pred <- read.csv('Complete_Workflow/grid_with_predictions.csv') %>%
+grid_with_pred <- read.csv('Complete_Workflow/grid_with_expectated_values.csv') %>%
   dplyr::select(-X)
 
 
@@ -27,12 +27,7 @@ grid_with_pred$BEGIN_LON <- grid_with_pred$BEGIN_LON * sd(tor_df$BEGIN_LON) +
 
 # Undo only the mean normalization on property damage, exponentiate,
 # Then convert to log10 scale
-grid_with_pred$DAMAGE_PROPERTY <- (grid_with_pred$DAMAGE_PROPERTY * sd(log(tor_df$DAMAGE_PROPERTY + 1,
-                                                                          base = exp(1))) +
-  mean(log(tor_df$DAMAGE_PROPERTY + 1,
-           base = exp(1)))) %>%
-  exp() %>%
-  log10()
+grid_with_pred$DAMAGE_PROPERTY <- log10(grid_with_pred$DAMAGE_PROPERTY)
  
  
 # Have the gridded points as a SpatialPointsDataFrame
@@ -79,9 +74,8 @@ ggplot(data = grid_with_pred) +
              pch = 15,
              alpha = 0.95) +
   facet_wrap(~MONTH, ncol = 3) +
-  viridis::scale_color_viridis('Predicted, Log-scale\nProperty Damage\n(US dollars + 1)') +
+  viridis::scale_color_viridis('Expected\nLog10-Scale\nProperty Damage\n(US dollars + 1)') +
   theme(plot.title = element_text(size = 19, hjust = 0.5),
-        plot.subtitle = element_text(size = 14, hjust = 0.5),
         axis.title = element_blank(),
         axis.text = element_blank(),
         aspect.ratio = 9/16,
@@ -92,13 +86,6 @@ ggplot(data = grid_with_pred) +
         panel.background = element_rect(fill = 'black'),
         strip.background = element_rect(fill = 'black'),
         strip.text = element_text(colour = 'grey80')) +
-  labs(title = 'Maps of 2018 Tornado-Induced Property Damage Predictions',
-       subtitle = 'Derived from the Best-Performing Neural Network') +
-  geom_point(data = cities_df,
-             aes(x = lon,
-                 y = lat),
-             col = 'black',
-             pch = 16,
-             size = 1/4)
+  labs(title = 'Expected Tornado Damage Values for 2018')
 
 
