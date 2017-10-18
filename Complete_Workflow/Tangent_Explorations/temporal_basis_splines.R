@@ -94,8 +94,6 @@ for (i in 2:ncol(monthly_splines)) {
 }
 
 
-
-
 # Plot/inspect all date splines
 for (i in 1:ncol(coarse_date_splines)) {
   if (i == 1) {
@@ -110,8 +108,6 @@ for (i in 1:ncol(coarse_date_splines)) {
 for (i in 1:ncol(yearly_date_splines)) {
   lines(date_seq, yearly_date_splines[, i], col = i)
 }
-
-
 
 
 # Plot/inspect all time splines
@@ -221,8 +217,6 @@ tor_df <- dplyr::select(tor_df,
 
 
 
-
-
 ###
 ###
 # ROUGHLY COPIED FROM Complete_Workflow/08...
@@ -303,13 +297,11 @@ tor_df <- merge(x = tor_df,
 
 
 
-
 ###
 ###
 # ROUGHLY COPIED FROM Complete_Workflow/09...
 ###
 ###
-
 
 
 
@@ -455,12 +447,13 @@ tor_df <- merge(tor_df, temp_df, by = 'EVENT_ID') %>%
   dplyr::select(-c(EVENT_ID))
 
 
+
+
 ###
 ###
 # ROUGHLY COPIED FROM Complete_Workflow/10_
 ###
 ###
-
 
 
 
