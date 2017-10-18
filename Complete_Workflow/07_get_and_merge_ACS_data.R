@@ -133,11 +133,13 @@ get_ACS_mob_hom_and_pop <- function(end_year) {
   
   # description: get mobile home count and population of each county from ACS
   # argument: end-year of the ACS
-  # return: a dataframe containing mobile home count and population of each county
+  # return: a dataframe containing mobile home count, total population, and
+  #     median household income of each county
   
   acs_df <- get_acs(geography = "county", endyear = end_year,
                     variables = c("B25024_010E",   # Total mobile homes
-                                  "B01003_001E"))  # Total population
+                                  "B01003_001E",   # Total population
+                                  "B19013_001E"))  # Median household icnome
   
   acs_df$YEAR <- rep(end_year, nrow(acs_df))
   
@@ -240,6 +242,11 @@ mob_home_data <- filter(acs_df,
                         variable == "B25024_010")
 
 
+# Get only median household income
+income_data <- filter(acs_df,
+                      variable == "B19013_001")
+
+
 # Match mobile home count to the land area data.frame
 land_area$MOB_HOM_COUNT <- mob_home_data$estimate[match(toupper(do.call(paste, land_area_county_state_year)),
                                                         paste(toupper(sub("\\s+\\w+,", "",
@@ -252,6 +259,12 @@ land_area$POP_COUNT <- population_data$estimate[match(toupper(do.call(paste, lan
                                                       paste(toupper(sub("\\s+\\w+,", "",
                                                                   population_data$NAME)),
                                                             population_data$YEAR))]
+
+# Match median household income to the land area data.frame
+land_area$MED_INC <- income_data$estimate[match(toupper(do.call(paste, land_area_county_state_year)),
+                                                paste(toupper(sub("\\s+\\w+,", "",
+                                                                  population_data$NAME)),
+                                                      population_data$YEAR))]
 
 
 # Notably, this left out St. Louis city, Missouri - big tornado town, rest are mostly Alaska
@@ -293,11 +306,15 @@ tor_df$MOB_HOME_DENS <- land_area$MOB_HOM_DENS[match(toupper(do.call(paste, tor_
                                                                        land_area$LOC)),
                                                            land_area$YEAR))]
 
-
 tor_df$POP_DENS <- land_area$POP_DENS[match(toupper(do.call(paste, tor_county_state_year)),
                                             paste(toupper(sub(",", "",
                                                               land_area$LOC)),
                                                   land_area$YEAR))]
+
+tor_df$INCOME <- land_area$MED_INC[match(toupper(do.call(paste, tor_county_state_year)),
+                                         paste(toupper(sub(",", "",
+                                                           land_area$LOC)),
+                                               land_area$YEAR))]
 
 
 # Save it
