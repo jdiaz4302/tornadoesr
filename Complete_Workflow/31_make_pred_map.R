@@ -6,6 +6,8 @@ library(dplyr)
 library(sp)
 library(raster)
 library(ggplot2)
+library(animation)
+library(gganimate)
 
 
 # Import the grid points
@@ -49,16 +51,11 @@ us_shape <- shapefile('data/raw/cb_2015_us_state_5m.shp') %>%
 # Make month a factor
 grid_with_pred$MONTH <- as.factor(grid_with_pred$MONTH)
 
+levels(grid_with_pred$MONTH) <- month.name
+
 
 # Specify that it's the 15th day of each month
 levels(grid_with_pred$MONTH) <- paste(month.name, '15th')
-
-
-# Get cities data
-cities_df <- read.csv('https://raw.githubusercontent.com/plotly/datasets/master/2014_us_cities.csv')
-
-cities_df <- dplyr::filter(cities_df,
-                           pop > 100000)
 
 
 # Plot a map for each month
@@ -87,5 +84,56 @@ ggplot(data = grid_with_pred) +
         strip.background = element_rect(fill = 'black'),
         strip.text = element_text(colour = 'grey80')) +
   labs(title = 'Expected Tornado Damage Values for 2018')
+
+
+# Some stuff that may be useful in the future
+
+# id_total <- nrow(grid_with_pred) / 12
+# grid_with_pred$ID <- rep(1:id_total, 12)
+# grid_with_pred$EASE <- rep("cubic-in-out",
+#                           nrow(grid_with_pred))
+# grid_with_pred$MONTH <- as.numeric(grid_with_pred$MONTH)
+
+# library(tweenr)
+# levels(grid_with_pred$MONTH) <- 1:12
+
+# grid_tween <- tween_elements(grid_with_pred,
+#                             time = 'MONTH', group = 'ID',
+#                             ease = 'EASE', nframes = 96)
+
+
+# Get the months as numeric
+levels(grid_with_pred$MONTH) <- 1:12
+
+
+# Make a gif with 2018 months as frames
+testing <- ggplot(grid_with_pred,
+                  aes(x = BEGIN_LON,
+                      y = BEGIN_LAT,
+                      frame = MONTH)) +
+  geom_point(aes(col = DAMAGE_PROPERTY),
+             pch = 16, size = 2.75) +
+  viridis::scale_color_viridis('Log Scale\nProperty Damage') +
+  theme_minimal() +
+  theme(axis.title = element_blank(),
+        axis.text = element_blank(),
+        aspect.ratio = 9/16,
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.border = element_blank(),
+        axis.ticks = element_blank(),
+        plot.title = element_text(hjust = 0.5, size = 22),
+        panel.background = element_rect(fill = 'black'),
+        legend.text = element_text(size = 16),
+        legend.title = element_text(size = 16)) +
+  ggtitle("Expected Tornado-Induced Property Damage, 2018 -")
+
+
+# Animate the gif
+gganimate(testing,
+          filename = 'tornado_present.gif',
+          interval = 0.3,
+          ani.width = 1725,
+          ani.height = 950)
 
 
