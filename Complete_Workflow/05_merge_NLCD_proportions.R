@@ -220,6 +220,6 @@ colnames(tor_LC_df)[colnames(tor_LC_df) == "percent.31"] <- "BARREN_LAND_PROP"
 
 
 # Then save the dataframe as .csv
-# readr::write_csv(tor_LC_df, "data/raw/tor_data_with_LC_only.csv")
+# readr::write_csv(tor_LC_df, "data/raw/tor_data_with_NLCD.csv")
 
 
