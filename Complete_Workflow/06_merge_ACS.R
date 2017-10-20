@@ -8,11 +8,17 @@ library(readr)
 
 
 # Import the tornado data - with income and NLCD
-tor_df <- read.csv("data/raw/tor_data_with_income.csv")
+tor_df <- read.csv("data/raw/tor_data_with_NLCD.csv")
+
+
+# Get state abbreviations from the names
+tor_df$state_abbrev <- state.abb[match(tor_df$STATE,
+                                       toupper(state.name))]
 
 
 # Import Census-provided land area per county data - gonna get densities
 # link: https://www.census.gov/support/USACdataDownloads.html#LND
+# Converted from xls to csv via Excel because R proved annoying
 land_area <- read.csv("data/raw/LND01.csv") %>%
   select(c(ï..Areaname, LND010200D))
 
@@ -139,7 +145,7 @@ get_ACS_mob_hom_and_pop <- function(end_year) {
   acs_df <- get_acs(geography = "county", endyear = end_year,
                     variables = c("B25024_010E",   # Total mobile homes
                                   "B01003_001E",   # Total population
-                                  "B19013_001E"))  # Median household icnome
+                                  "B19013_001E"))  # Median household income
   
   acs_df$YEAR <- rep(end_year, nrow(acs_df))
   
@@ -315,6 +321,10 @@ tor_df$INCOME <- land_area$MED_INC[match(toupper(do.call(paste, tor_county_state
                                          paste(toupper(sub(",", "",
                                                            land_area$LOC)),
                                                land_area$YEAR))]
+
+
+# Get rid of any now-incomplete rows
+tor_df <- na.omit(tor_df)
 
 
 # Save it
