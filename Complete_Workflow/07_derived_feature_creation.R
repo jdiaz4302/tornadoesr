@@ -176,5 +176,8 @@ tor_df <- na.omit(tor_df)
 
 # Save it
 # write_csv(tor_df, "data/raw/tor_data_with_derived.csv")
+# Save the reference-spline data frames as well
+# write_csv(time_ref_df, 'data/raw/time_splines_ref.csv')
+# write_csv(julian_ref_df, 'data/raw/julian_splines_ref.csv')
 
 
