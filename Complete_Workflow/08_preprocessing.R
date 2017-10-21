@@ -8,7 +8,7 @@ library(readr)
 
 
 # Import data
-tor_df <- read.csv("data/raw/tor_data_with_interact_effects.csv")
+tor_df <- read.csv("data/raw/tor_data_with_derived.csv")
 
 
 # Functions that need defining
@@ -67,22 +67,6 @@ mean_norm_log_xform_prop <- function(to_process) {
 }
 
 
-# Let's have time start at 7 AM, expected sunrise
-# Get "Which start after 7?"
-tor_df$after_7 <- tor_df$BEGIN_TIME > 420
-
-# Make into separate df's
-tor_after_7 <- tor_df[tor_df$after_7 == TRUE, ]
-tor_before_7 <- tor_df[tor_df$after_7 == FALSE, ]
-
-# Make the proper adjustments
-tor_after_7$TIME <- tor_after_7$BEGIN_TIME - 420
-tor_before_7$TIME <- tor_before_7$BEGIN_TIME + 1020
-
-# Recombine them
-tor_df <- rbind(tor_after_7, tor_before_7)
-
-
 # Process the Storm Events variables
 tor_df$DURATION_SECONDS <- mean_norm_log_xform(tor_df$DURATION_SECONDS)
 
@@ -131,10 +115,6 @@ tor_df$HERB_WETLAND_PROP <- mean_norm_log_xform_prop(tor_df$HERB_WETLAND_PROP)
 tor_df$BARREN_LAND_PROP <- mean_norm_log_xform_prop(tor_df$BARREN_LAND_PROP)
 
 
-# Process income data
-tor_df$INCOME <- mean_norm_log_xform(tor_df$INCOME)
-
-
 # Process the interaction effects
 tor_df$TOR_AREA <- mean_norm_log_xform_prop(tor_df$TOR_AREA)
 
@@ -148,12 +128,6 @@ tor_df$EXP_INC_AREA <- mean_norm_log_xform(tor_df$EXP_INC_AREA)
 
 
 # Storm events variables that took more work to get
-tor_df$DAY_OF_YEAR <- mean_norm_log_xform(tor_df$DAY_OF_YEAR)
-
-tor_df$MONTH <- mean_normalize(tor_df$MONTH)
-
-tor_df$TIME <- mean_normalize(tor_df$TIME)
-
 tor_df$STATE_RANK <- mean_norm_log_xform_prop(tor_df$STATE_RANK)
 
 tor_df$YEAR <- mean_normalize(tor_df$YEAR)
@@ -164,6 +138,8 @@ tor_df$MOB_HOME_DENS <- mean_norm_log_xform_prop(tor_df$MOB_HOME_DENS)
 
 tor_df$POP_DENS <- mean_norm_log_xform(tor_df$POP_DENS)
 
+tor_df$INCOME <- mean_norm_log_xform(tor_df$INCOME)
+
 
 # Take a look at all the distributions
 tor_hist_data <- melt(tor_df)
@@ -172,20 +148,16 @@ tor_hist_data <- dplyr::select(tor_hist_data,
                                -c(CZ_NAME,
                                   STATE,
                                   BEGIN_DATE_TIME,
-                                  state_abbrev,
-                                  after_7))
+                                  state_abbrev))
 
 tor_hist_data <- dplyr::filter(tor_hist_data,
                                variable != "EVENT_ID")
 
 tor_hist_data <- dplyr::filter(tor_hist_data,
-                               variable != "BEGIN_HOUR")
-
-tor_hist_data <- dplyr::filter(tor_hist_data,
-                               variable != "BEGIN_MINUTE")
-
-tor_hist_data <- dplyr::filter(tor_hist_data,
                                variable != "BEGIN_TIME")
+
+tor_hist_data <- dplyr::filter(tor_hist_data,
+                               variable != "JULIAN_DAY")
 
 
 # Plot them
@@ -201,17 +173,13 @@ ggplot(tor_hist_data,
 # Get rid of the variables not being analyzed
 tor_df <- dplyr::select(tor_df,
                            -c(STATE,
-                              EVENT_ID,
                               BEGIN_DATE_TIME,
+                              EVENT_ID,
                               CZ_NAME,
-                              state_abbrev,
-                              BEGIN_TIME,
-                              BEGIN_HOUR,
-                              BEGIN_MINUTE,
-                              after_7))
+                              state_abbrev))
 
 
 # Save it
-# write_csv(tor_df, "data/raw/tor_data_processed.csv")
+# write_csv(tor_df, "data/raw/tor_data_preprocessed.csv")
 
 
