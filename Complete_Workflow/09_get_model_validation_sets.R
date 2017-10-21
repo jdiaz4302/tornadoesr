@@ -6,11 +6,12 @@ library(readr)
 
 
 # Import dataset to split
-tor_df <- read.csv("data/raw/tor_data_processed.csv")
+tor_df <- read.csv("data/raw/tor_data_preprocessed.csv")
 
 
 # Shuffle it, for safety
 tor_df <- tor_df[sample(nrow(tor_df)), ]
+
 
 # Reset index
 rownames(tor_df) <- NULL
@@ -48,6 +49,10 @@ indicesValidation <- sort(sample(indicesNotTraining,
 # Give test set what indices remain
 indicesTest <- setdiff(indicesNotTraining,
                        indicesValidation)
+
+
+# Get rid of the unnecessary 'NotTraining'
+rm(indicesNotTraining)
 
 
 # Subset the data
