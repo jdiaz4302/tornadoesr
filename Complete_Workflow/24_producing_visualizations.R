@@ -128,7 +128,7 @@ predictions_df <- na.omit(predictions_df)
 
 
 # Import the unprocessed data
-not_processed_df <- read.csv("data/raw/tor_data_with_interact_effects.csv")
+not_processed_df <- read.csv("data/raw/tor_data_with_derived.csv")
 
 
 # Get the values needed to undo the mean normalization
@@ -147,31 +147,31 @@ predictions_df$true_values <- ((predictions_df$true_values * log_sd) + log_mean)
 
 
 # Get better labels for the facetting
-predictions_df$label <- ifelse(predictions_df$notebook_number == 12,
+predictions_df$label <- ifelse(predictions_df$notebook_number == 11,
                                 'Before. with Zeros',
-                                ifelse(predictions_df$notebook_number == 13,
+                                ifelse(predictions_df$notebook_number == 12,
                                        'Storm Character. with Zeros',
-                                       ifelse(predictions_df$notebook_number == 14,
-                                              'Holistic with Zeros',
-                                              ifelse(predictions_df$notebook_number == 15,
+                                       ifelse(predictions_df$notebook_number == 13,
+                                              'Combined with Zeros',
+                                              ifelse(predictions_df$notebook_number == 14,
                                                      'Before. without Zeros',
-                                                     ifelse(predictions_df$notebook_number == 16,
+                                                     ifelse(predictions_df$notebook_number == 15,
                                                             'Storm Character. without Zeros',
-                                                            ifelse(predictions_df$notebook_number == 17,
-                                                                   'Holistic without Zeros',
-                                                                   ifelse(predictions_df$notebook_number == 18,
+                                                            ifelse(predictions_df$notebook_number == 16,
+                                                                   'Combined without Zeros',
+                                                                   ifelse(predictions_df$notebook_number == 17,
                                                                           'Deep Models',
-                                                                          ifelse(predictions_df$notebook_number == 19,
+                                                                          ifelse(predictions_df$notebook_number == 18,
                                                                                  'Wide Models',
-                                                                                 ifelse(predictions_df$notebook_number == 20,
+                                                                                 ifelse(predictions_df$notebook_number == 19,
                                                                                         'Wide Once Reg.',
-                                                                                        ifelse(predictions_df$notebook_number == 21,
+                                                                                        ifelse(predictions_df$notebook_number == 20,
                                                                                                'Wide Twice Reg',
-                                                                                               ifelse(predictions_df$notebook_number == 22,
+                                                                                               ifelse(predictions_df$notebook_number == 21,
                                                                                                       'Deep ELU',
-                                                                                                      ifelse(predictions_df$notebook_number == 23,
+                                                                                                      ifelse(predictions_df$notebook_number == 22,
                                                                                                              'Wide ELU',
-                                                                                                             ifelse(predictions_df$notebook_number == 24,
+                                                                                                             ifelse(predictions_df$notebook_number == 23,
                                                                                                                     'Descending ELU',
                                                                                                                     'Error'))))))))))))) %>%
   as.factor()
@@ -179,9 +179,9 @@ predictions_df$label <- ifelse(predictions_df$notebook_number == 12,
 
 # Get the levels in a more appealing order
 predictions_df$label <- factor(predictions_df$label,
-                               levels(predictions_df$label)[c(1, 8, 6, 2,
-                                                              9, 7, 4, 11,
-                                                              12, 13, 5, 3,
+                               levels(predictions_df$label)[c(1, 8, 3, 2,
+                                                              9, 4, 6, 11,
+                                                              12, 13, 7, 5,
                                                               10)])
 
 
@@ -213,13 +213,13 @@ ggplot(predictions_df,
 
 # Filter out the non-holistic models
 param_plot_df <- dplyr::filter(metrics_df,
-                               notebook_id >= 17)
+                               notebook_id >= 16)
 
 
 # Keep the notebooks that test different parameter numbers
 # Other than dropout percent and l2 penalty
 param_plot_df <- dplyr::filter(param_plot_df,
-                               notebook_id %in% c(17, 18, 19, 22, 23, 24))
+                               notebook_id %in% c(16, 17, 18, 21, 22, 23))
 
 
 # Label the models as neural network or multivariate regression
@@ -228,17 +228,17 @@ param_plot_df$model_type <- ifelse(param_plot_df$Number.of.Parameters > 100,
 
 
 # Get better labels
-param_plot_df$label <- ifelse(param_plot_df$notebook_id == 17,
-                              'Holistic without Zeros',
-                              ifelse(param_plot_df$notebook_id == 18,
+param_plot_df$label <- ifelse(param_plot_df$notebook_id == 16,
+                              'Combined without Zeros',
+                              ifelse(param_plot_df$notebook_id == 17,
                                      'Deep Models',
-                                     ifelse(param_plot_df$notebook_id == 19,
+                                     ifelse(param_plot_df$notebook_id == 18,
                                             'Wide Models',
-                                            ifelse(param_plot_df$notebook_id == 22,
+                                            ifelse(param_plot_df$notebook_id == 21,
                                                    'Deep ELU',
-                                                   ifelse(param_plot_df$notebook_id == 23,
+                                                   ifelse(param_plot_df$notebook_id == 22,
                                                           'Wide ELU',
-                                                          ifelse(param_plot_df$notebook_id == 24,
+                                                          ifelse(param_plot_df$notebook_id == 23,
                                                                  'Descending ELU',
                                                                  'Error')))))) %>%
   as.factor()
@@ -246,16 +246,8 @@ param_plot_df$label <- ifelse(param_plot_df$notebook_id == 17,
 
 # Get proper ordering of labels
 param_plot_df$label <- factor(param_plot_df$label,
-                              levels(param_plot_df$label)[c(4, 2, 6,
-                                                            3, 1, 5)])
-
-
-# Get annotation (to label overfitting)
-ann_text <- data.frame(Number.of.Parameters = 2000,
-                       Mean.Squared.Error = 0.1,
-                       model_type = "irrelevant",
-                       label = factor('Wide Models',
-                                      levels = levels(param_plot_df$label)))
+                              levels(param_plot_df$label)[c(1, 3, 6,
+                                                            4, 2, 5)])
 
 
 # Plot MSE by number of parameters for each notebook
@@ -275,10 +267,7 @@ ggplot(param_plot_df,
        shape = 'Model Type') +
   theme(aspect.ratio = 1,
         plot.title = element_text(hjust = 0.5, size = 16),
-        axis.title = element_text(size = 13)) +
-  geom_text(data = ann_text,
-            label = "Overfitting",
-            size = 3.5)
+        axis.title = element_text(size = 13))
 
 
 # Plot far-end MSE by number of parameters for each notebook
@@ -405,31 +394,31 @@ colnames(best_of_metrics) <- c("X",
 
 
 # Give better labels
-best_of_metrics$Label <- ifelse(best_of_metrics$notebook_id == 12,
+best_of_metrics$Label <- ifelse(best_of_metrics$notebook_id == 11,
                                 'Before. with Zeros',
-                                ifelse(best_of_metrics$notebook_id == 13,
+                                ifelse(best_of_metrics$notebook_id == 12,
                                        'Storm Character. with Zeros',
-                                       ifelse(best_of_metrics$notebook_id == 14,
+                                       ifelse(best_of_metrics$notebook_id == 13,
                                               'Combined with Zeros',
-                                              ifelse(best_of_metrics$notebook_id == 15,
+                                              ifelse(best_of_metrics$notebook_id == 14,
                                                      'Before. without Zeros',
-                                                     ifelse(best_of_metrics$notebook_id == 16,
+                                                     ifelse(best_of_metrics$notebook_id == 15,
                                                             'Storm Character. without Zeros',
-                                                            ifelse(best_of_metrics$notebook_id == 17,
+                                                            ifelse(best_of_metrics$notebook_id == 16,
                                                                    'Combined without Zeros',
-                                                                   ifelse(best_of_metrics$notebook_id == 18,
+                                                                   ifelse(best_of_metrics$notebook_id == 17,
                                                                           'Deep Models',
-                                                                          ifelse(best_of_metrics$notebook_id == 19,
+                                                                          ifelse(best_of_metrics$notebook_id == 18,
                                                                                  'Wide Models',
-                                                                                 ifelse(best_of_metrics$notebook_id == 20,
+                                                                                 ifelse(best_of_metrics$notebook_id == 19,
                                                                                         'Wide Once Reg.',
-                                                                                        ifelse(best_of_metrics$notebook_id == 21,
+                                                                                        ifelse(best_of_metrics$notebook_id == 20,
                                                                                                'Wide Twice Reg',
-                                                                                               ifelse(best_of_metrics$notebook_id == 22,
+                                                                                               ifelse(best_of_metrics$notebook_id == 21,
                                                                                                       'Deep ELU',
-                                                                                                      ifelse(best_of_metrics$notebook_id == 23,
+                                                                                                      ifelse(best_of_metrics$notebook_id == 22,
                                                                                                              'Wide ELU',
-                                                                                                             ifelse(best_of_metrics$notebook_id == 24,
+                                                                                                             ifelse(best_of_metrics$notebook_id == 23,
                                                                                                                     'Descending ELU',
                                                                                                                     'Error'))))))))))))) %>%
   as.factor()
@@ -444,13 +433,13 @@ best_of_metrics <- dplyr::select(best_of_metrics,
 
 # Rounding the numbers
 best_of_metrics$`R-squared` <- signif(best_of_metrics$`R-squared`,
-                                      digits = 2)
+                                      digits = 3)
 
 best_of_metrics$`Mean Squared Error` <- signif(best_of_metrics$`Mean Squared Error`,
-                                               digits = 2)
+                                               digits = 3)
 
 best_of_metrics$`Mean Squared Error Over 1M` <- signif(best_of_metrics$`Mean Squared Error Over 1M`,
-                                                       digits = 2)
+                                                       digits = 3)
 
 
 # Better order of variables
