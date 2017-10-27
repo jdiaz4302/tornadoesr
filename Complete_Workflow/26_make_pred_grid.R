@@ -218,34 +218,6 @@ grid_with_LC <- na.omit(grid_with_LC)
 grid_with_LC$YEAR <- rep(2018, nrow(grid_with_LC))
 
 
-# Import the income data
-county_income_data <- read.csv("data/raw/GeoFRED_Estimate_of_Median_Household_Income_by_County_Dollars.csv")
-
-
-# Fix (most of) the column names
-colnames(county_income_data) <- county_income_data[1, ]
-
-
-# Get rid of the unneeded columns, which are messing up the later melt
-location <- county_income_data[, 2]
-
-county_income_data_reduced <- cbind(location,
-                                    county_income_data[, 4:22])
-
-
-# Get rid of the extra header row, which is acting as a data row
-county_income_data_reduced <- dplyr::filter(county_income_data_reduced,
-                                            location != "Region Name")
-
-
-# 2018 is not provided, so let's assume that it's the same as 2015
-county_income_data_reduced$'2018' <- county_income_data_reduced$`2015`
-
-
-# Reshape the data.frame so that year is a variable
-county_income_reshaped <- melt(county_income_data_reduced, id = "location")
-
-
 # Change the state names to abbreviations
 grid_with_LC$state_abbrev <- state.abb[match(grid_with_LC$state,
                                              toupper(state.name))]
@@ -254,25 +226,6 @@ grid_with_LC$state_abbrev <- state.abb[match(grid_with_LC$state,
 # Get the county, state, and year of each grid point
 grid_county_state_year <- dplyr::select(grid_with_LC,
                                         c(county_name, state_abbrev, YEAR))
-
-
-# Get income by location and year
-county_income_reshaped$to_match_by <- toupper(sub("\\s+\\w+,", "",
-                                                  paste(county_income_reshaped$location,
-                                                        county_income_reshaped$variable)))
-
-
-# Get location and year of each grid point as one 'column'
-grid_county_state_year_together <- do.call(paste, grid_county_state_year)
-
-
-# Match income with grid points
-grid_with_LC$INCOME <- county_income_reshaped$value[match(grid_county_state_year_together,
-                                                          county_income_reshaped$to_match_by)]
-
-
-# Remove NA rows
-grid_with_LC <- na.omit(grid_with_LC)
 
 
 # Import the census-provided county area data.frame
@@ -344,7 +297,7 @@ land_area_county_state_year <- select(land_area,
 
 
 # Set census API
-census_api_key("enter your census key")
+census_api_key("ENTER YOUR CENSUS API KEY")
 
 
 # Writing a function to get ACS data of interest
@@ -354,9 +307,10 @@ get_ACS_mob_hom_and_pop <- function(end_year) {
   # argument: end-year of the ACS
   # return: a dataframe containing mobile home count and population of each county
   
-  acs_df <- get_acs(geography = "county", endyear = end_year,
+  acs_df <- get_acs(geography = "county", year = end_year,
                     variables = c("B25024_010E",   # Total mobile homes
-                                  "B01003_001E"))  # Total population
+                                  "B01003_001E",   # Total population
+                                  "B19013_001E"))  # Median household income
   
   acs_df$YEAR <- rep(end_year, nrow(acs_df))
   
@@ -386,6 +340,11 @@ mob_home_data <- filter(acs_df,
                         variable == "B25024_010")
 
 
+# Get only median household income
+income_data <- filter(acs_df,
+                      variable == "B19013_001")
+
+
 # Match mobile home count to the land area data.frame
 land_area$MOB_HOM_COUNT <- mob_home_data$estimate[match(toupper(do.call(paste, land_area_county_state_year)),
                                                         paste(toupper(sub("\\s+\\w+,", "",
@@ -398,6 +357,13 @@ land_area$POP_COUNT <- population_data$estimate[match(toupper(do.call(paste, lan
                                                       paste(toupper(sub("\\s+\\w+,", "",
                                                                         population_data$NAME)),
                                                             population_data$YEAR))]
+
+
+# Match population count to the land area data.frame
+land_area$INCOME <- income_data$estimate[match(toupper(do.call(paste, land_area_county_state_year)),
+                                               paste(toupper(sub("\\s+\\w+,", "",
+                                                                 income_data$NAME)),
+                                                     income_data$YEAR))]
 
 
 # Make land area numeric
@@ -434,6 +400,12 @@ grid_with_LC$POP_DENS <- land_area$POP_DENS[match(toupper(do.call(paste, grid_co
                                                               land_area$LOC)),
                                                   land_area$YEAR))]
 
+grid_with_LC$INCOME <- land_area$INCOME[match(toupper(do.call(paste, grid_county_state_year)),
+                                              paste(toupper(sub(",", "",
+                                                                land_area$LOC)),
+                                                    land_area$YEAR))]
+
+
 # Some counties don't appear in all data sources, therefore making some Inf values
 # Getting rid of the NAs and Infs
 grid_with_LC <- dplyr::filter(grid_with_LC,
@@ -442,7 +414,7 @@ grid_with_LC <- dplyr::filter(grid_with_LC,
 
 
 # Import the unprocessed model data
-unprocessed_tor_df <- read.csv('data/raw/tor_data_with_interact_effects.csv')
+unprocessed_tor_df <- read.csv('data/raw/tor_data_with_derived.csv')
 
 
 # For non-beforehand variables, assume the mean
@@ -456,17 +428,14 @@ grid_with_LC$assumed_tor_width <- rep(mean(unprocessed_tor_df$TOR_WIDTH),
                                       nrow(grid_with_LC))
 
 grid_with_LC$time <- rep(mean(unprocessed_tor_df$BEGIN_TIME),
-                         nrow(grid_with_LC))
-
-
-# Getting time in the same format
-grid_with_LC$time <- ifelse(grid_with_LC$time > 420,
-                            grid_with_LC$time - 420,
-                            grid_with_LC$time + 1020)
+                         nrow(grid_with_LC)) %>%
+  floor()
 
 
 # Assigning state rank the same way it was done the first time
-tor_df <- read.csv("data/raw/tor_data_with_ACS.csv")
+# Before these were different data sets, no longer the case
+# Refuse to rename throughout
+tor_df <- unprocessed_tor_df
 DamPerState <- aggregate(tor_df$DAMAGE_PROPERTY,
                          by = list(Category = tor_df$STATE),
                          FUN = sum)
@@ -540,12 +509,7 @@ grid_with_LC$EXP_INC_AREA <- grid_with_LC$INCOME * grid_with_LC$assumed_area
 
 
 # For the predictions, we will do the 15th of each month
-fifteenth_julian_days <- c(15, 46, 74, 105, 135, 166, 196, 227, 258, 288, 319, 349)
-
-month <- seq(1, 12)
-
-day_combos <- cbind(as.data.frame(month),
-                    as.data.frame(fifteenth_julian_days))
+julian_days <- c(15, 46, 74, 105, 135, 166, 196, 227, 258, 288, 319, 349)
 
 
 # Have this temp_df for for-loop purposes
@@ -553,17 +517,15 @@ temp_df <- grid_with_LC
 
 
 # Copy all the grid data for all 12 of the '<month> the 15th'
-for (i in 1:12) {
+for (i in 1:length(julian_days)) {
   
   if (i == 1) {
     
-    grid_with_LC$month <- rep(day_combos[i, 1])
-    grid_with_LC$julian_day <- rep(day_combos[i, 2])
+    grid_with_LC$julian_day <- rep(julian_days[i], nrow(grid_with_LC))
     
   } else {
     
-    temp_df$month <- rep(day_combos[i, 1])
-    temp_df$julian_day <- rep(day_combos[i, 2])
+    temp_df$julian_day <- rep(julian_days[i], nrow(temp_df))
     grid_with_LC <- rbind(grid_with_LC, temp_df)
     
   }
@@ -575,38 +537,41 @@ for (i in 1:12) {
 rm(temp_df)
 
 
+# Match grid values to the reference basis spline data set
+# Import the reference data sets
+time_ref_df <- read.csv('data/raw/time_splines_ref.csv')
+julian_ref_df <- read.csv('data/raw/julian_splines_ref.csv')
+
+
+# Merge the time-based basis splines
+grid_with_LC <- base::merge(x = grid_with_LC,
+                            y = time_ref_df,
+                            by.x = 'time',
+                            by.y = 'BEGIN_TIME')
+
+
+# Merge julian-based basis splines
+grid_with_LC <- base::merge(x = grid_with_LC,
+                            y = julian_ref_df,
+                            by.x = 'julian_day',
+                            by.y = 'JULIAN_DAY')
+
+
 # Keep names the same as the original model data
-colnames(grid_with_LC)[3] <- 'BEGIN_LON'
-colnames(grid_with_LC)[4] <- 'BEGIN_LAT'
-colnames(grid_with_LC)[26] <- 'DURATION_SECONDS'
-colnames(grid_with_LC)[27] <- 'TOR_LENGTH'
-colnames(grid_with_LC)[28] <- 'TOR_WIDTH'
-colnames(grid_with_LC)[29] <- 'TIME'
-colnames(grid_with_LC)[31] <- 'MULTI_VORT_IND'
-colnames(grid_with_LC)[32] <- 'TOR_AREA'
-colnames(grid_with_LC)[37] <- 'MONTH'
-colnames(grid_with_LC)[38] <- 'DAY_OF_YEAR'
+colnames(grid_with_LC)[colnames(grid_with_LC) == 'LON'] <- 'BEGIN_LON'
+colnames(grid_with_LC)[colnames(grid_with_LC) == 'LAT'] <- 'BEGIN_LAT'
+colnames(grid_with_LC)[colnames(grid_with_LC) == 'assumed_duration'] <- 'DURATION_SECONDS'
+colnames(grid_with_LC)[colnames(grid_with_LC) == 'assumed_tor_length'] <- 'TOR_LENGTH'
+colnames(grid_with_LC)[colnames(grid_with_LC) == 'assumed_tor_width'] <- 'TOR_WIDTH'
+colnames(grid_with_LC)[colnames(grid_with_LC) == 'mult_vort_ind'] <- 'MULTI_VORT_IND'
+colnames(grid_with_LC)[colnames(grid_with_LC) == 'assumed_area'] <- 'TOR_AREA'
+colnames(grid_with_LC)[colnames(grid_with_LC) == 'time'] <- 'BEGIN_TIME'
+colnames(grid_with_LC)[colnames(grid_with_LC) == 'julian_day'] <- 'JULIAN_DAY'
 
 
 # Importing unprocessed model data to do the processing
 # With the same means and standard deviations
-tor_df <- read.csv("data/raw/tor_data_with_interact_effects.csv")
-
-# Processing it how it was originally processed
-# Let's have time start at 7 AM, expected sunrise
-# Get "Which start after 7?"
-tor_df$after_7 <- tor_df$BEGIN_TIME > 420
-
-# Make into separate df's
-tor_after_7 <- tor_df[tor_df$after_7 == TRUE, ]
-tor_before_7 <- tor_df[tor_df$after_7 == FALSE, ]
-
-# Make the proper adjustments
-tor_after_7$TIME <- tor_after_7$BEGIN_TIME - 420
-tor_before_7$TIME <- tor_before_7$BEGIN_TIME + 1020
-
-# Recombine them
-tor_df <- rbind(tor_after_7, tor_before_7)
+tor_df <- read.csv("data/raw/tor_data_with_derived.csv")
 
 
 # Define a simple mean normalization function
@@ -726,12 +691,6 @@ grid_with_LC$WOOD_DEV_INT <- mean_norm_log_xform_prop('WOOD_DEV_INT')
 
 grid_with_LC$EXP_INC_AREA <- mean_norm_log_xform('EXP_INC_AREA')
 
-grid_with_LC$DAY_OF_YEAR <- mean_norm_log_xform('DAY_OF_YEAR')
-
-grid_with_LC$MONTH <- mean_normalize('MONTH')
-
-grid_with_LC$TIME <- mean_normalize('TIME')
-
 grid_with_LC$STATE_RANK <- mean_norm_log_xform_prop('STATE_RANK')
 
 grid_with_LC$YEAR <- mean_normalize('YEAR')
@@ -752,6 +711,10 @@ grid_hist_data <- dplyr::select(grid_hist_data,
 
 grid_hist_data <- dplyr::filter(grid_hist_data,
                                 variable != "ID")
+grid_hist_data <- dplyr::filter(grid_hist_data,
+                                variable != "time")
+grid_hist_data <- dplyr::filter(grid_hist_data,
+                                variable != "julian_day")
 
 
 # Plot the distributions
@@ -763,50 +726,15 @@ ggplot(grid_hist_data,
   theme_bw()
 
 
-# Get rid of the variables not being analyzed
-grid_with_LC <- dplyr::select(grid_with_LC,
-                              -c(STATE,
-                                 ID,
-                                 county_name,
-                                 state_abbrev))
+# Import the training data to get the same column order
+train_data <- read.csv("data/raw/tor_train_set.csv")
 
 
-# Get the columns in the same order as the model data
+# They need to have matching column names, so adding an all-missing
+# Property Damage column to the grid data
+grid_with_LC$DAMAGE_PROPERTY <- rep(NA, nrow(grid_with_LC))
 final_grid_df <- dplyr::select(grid_with_LC,
-                               c(DURATION_SECONDS,
-                                 BEGIN_LAT,
-                                 BEGIN_LON,
-                                 TOR_LENGTH,
-                                 TOR_WIDTH,
-                                 YEAR,
-                                 MULTI_VORT_IND,
-                                 OPEN_WATER_PROP,
-                                 DEV_OPEN_PROP,
-                                 DEV_LOW_PROP,
-                                 DEV_MED_PROP,
-                                 DEV_HIGH_PROP,
-                                 BARREN_LAND_PROP,
-                                 DECID_FOREST_PROP,
-                                 EVERGR_FOREST_PROP,
-                                 MIXED_FOREST_PROP,
-                                 SHRUB_SCRUB_PROP,
-                                 GRASS_LAND_PROP,
-                                 PASTURE_HAY_PROP,
-                                 CULT_CROPS_PROP,
-                                 WOOD_WETLAND_PROP,
-                                 HERB_WETLAND_PROP,
-                                 INCOME,
-                                 MOB_HOME_DENS,
-                                 POP_DENS,
-                                 TOR_AREA,
-                                 TOT_DEV_INT,
-                                 TOT_WOOD_AREA,
-                                 WOOD_DEV_INT,
-                                 EXP_INC_AREA,
-                                 DAY_OF_YEAR,
-                                 MONTH,
-                                 STATE_RANK,
-                                 TIME))
+                               colnames(train_data))
 
 
 # Save the gridded data.frame so we can predict off it in PyTorch
