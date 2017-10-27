@@ -142,7 +142,7 @@ get_ACS_mob_hom_and_pop <- function(end_year) {
   # return: a dataframe containing mobile home count, total population, and
   #     median household income of each county
   
-  acs_df <- get_acs(geography = "county", endyear = end_year,
+  acs_df <- get_acs(geography = "county", year = end_year,
                     variables = c("B25024_010E",   # Total mobile homes
                                   "B01003_001E",   # Total population
                                   "B19013_001E"))  # Median household income
