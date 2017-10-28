@@ -48,16 +48,6 @@ us_shape <- shapefile('data/raw/cb_2015_us_state_5m.shp') %>%
   crop(extent(-125, -66, 23, 50))
 
 
-# Make month a factor
-grid_with_pred$MONTH <- as.factor(grid_with_pred$MONTH)
-
-levels(grid_with_pred$MONTH) <- month.name
-
-
-# Specify that it's the 15th day of each month
-levels(grid_with_pred$MONTH) <- paste(month.name, '15th')
-
-
 # Plot a map for each month
 ggplot(data = grid_with_pred) +
   theme_bw() +
@@ -70,7 +60,7 @@ ggplot(data = grid_with_pred) +
              size = 1,
              pch = 15,
              alpha = 0.95) +
-  facet_wrap(~MONTH, ncol = 3) +
+  facet_wrap(~JULIAN_DAY, ncol = 3) +
   viridis::scale_color_viridis('Expected\nLog10-Scale\nProperty Damage\n(US dollars + 1)') +
   theme(plot.title = element_text(size = 19, hjust = 0.5),
         axis.title = element_blank(),
@@ -102,15 +92,11 @@ ggplot(data = grid_with_pred) +
 #                             ease = 'EASE', nframes = 96)
 
 
-# Get the months as numeric
-levels(grid_with_pred$MONTH) <- 1:12
-
-
 # Make a gif with 2018 months as frames
 testing <- ggplot(grid_with_pred,
                   aes(x = BEGIN_LON,
                       y = BEGIN_LAT,
-                      frame = MONTH)) +
+                      frame = JULIAN_DAY)) +
   geom_point(aes(col = DAMAGE_PROPERTY),
              pch = 16, size = 2.75) +
   viridis::scale_color_viridis('Log Scale\nProperty Damage') +
