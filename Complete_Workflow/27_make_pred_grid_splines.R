@@ -1,0 +1,812 @@
+
+
+
+# Packages
+library(sp)
+library(raster)
+library(dplyr)
+library(readr)
+library(maps)
+library(maptools)
+library(reshape2)
+library(tidycensus)
+library(ggplot2)
+
+
+# Get all possible longitude values
+LON <- seq(from = -125,
+           to = -66,
+           by = 0.25)
+
+
+# Iteratively add each possible latitude value in an
+# Adjacent column to the longitude values
+for (i in seq(from = 23, to = 50, by = 0.25)) {
+  
+  if (i == 23) {
+    
+    # Make the data.frame on the first iteration
+    grid_df <- as.data.frame(LON)
+    grid_df$LAT <- rep(i, length(grid_df))
+    
+  } else {
+    
+    # On every other iteration make a temporary data.frame
+    temp_df <- as.data.frame(LON)
+    temp_df$LAT <- rep(i, length(temp_df))
+    
+    # Then bind it to the original
+    grid_df <- rbind(grid_df, temp_df)
+    
+  }
+  
+}
+
+
+# Remove the temporary data.frame
+rm(temp_df)
+
+
+# Give each lat/lon combo an ID
+grid_df$ID <- seq(1, nrow(grid_df))
+
+
+# Get those points as a Spatial object
+grid_points <- SpatialPointsDataFrame(coords = grid_df[, 1:2],
+                                      data = as.data.frame(grid_df$ID),
+                                      proj4string = CRS('+init=epsg:4326'))
+
+
+# Read the census-provided United States shapefile
+# Convert its crs
+# And crop it to only the continental US
+us_shape <- shapefile('data/raw/cb_2015_us_nation_5m.shp') %>%
+  spTransform(CRSobj = crs(grid_points)) %>%
+  crop(extent(-125, -66, 23, 50))
+
+
+# Only points within the continental US
+grid_points <- grid_points[us_shape, ]
+
+
+# Import the NLCD raster
+NLCD_2011 <- raster("data/raw/nlcd_2011_landcover_2011_edition_2014_10_10/nlcd_2011_landcover_2011_edition_2014_10_10.img")
+
+
+# Convert the grid's crs to that of the NLCD
+grid_NLCD_crs <- spTransform(grid_points,
+                             crs(NLCD_2011))
+
+# Get the extraction buffer
+source("Complete_Workflow/03_clean_StormEvents_files.R")
+avg_tor_length_meters <- mean(tor_df$TOR_LENGTH) * 1609.34
+
+
+# Extract the LC values for each pixel
+Sys.time()
+grid_LC_values <- raster::extract(NLCD_2011,
+                                  grid_NLCD_crs,
+                                  buffer = avg_tor_length_meters)
+Sys.time()
+
+
+# Get the proportion of LC values in the buffer area
+# Of each lat/lon combo
+LC_prop_grid <- lapply(grid_LC_values, function(x) {
+  
+  prop.table(table(x))
+  
+  })
+
+Sys.time()
+
+
+# Make it into a data.frame
+LC_grid_df <- data.frame(ID = rep(grid_points$`grid_df$ID`,
+                                  lapply(LC_prop_grid,
+                                         length)),
+                         cover = names(unlist(LC_prop_grid)),
+                         percent = unlist(LC_prop_grid))
+
+
+# Get rid of this error classification
+LC_grid_df <- dplyr::filter(LC_grid_df,
+                            cover != 0)
+
+# Get rid of the snow/ice classification
+LC_grid_df <- dplyr::filter(LC_grid_df,
+                            cover != 12)
+
+
+# Reshape the data.frame
+LC_grid_df <- reshape(LC_grid_df,
+                      idvar = "ID",
+                      timevar = "cover",
+                      direction = "wide")
+
+
+# All NA's should be 0's because it's 'missing value'
+# For a land cover classification; ie, none of that classification
+LC_grid_df[is.na(LC_grid_df)] <- 0
+
+
+# Merge the LC proportions to their lat/lon combos
+grid_with_LC <- merge(x = grid_df,
+                      y = LC_grid_df)
+
+
+# Give the LC values a name
+colnames(grid_with_LC)[colnames(grid_with_LC) == "percent.11"] <- "OPEN_WATER_PROP"
+
+colnames(grid_with_LC)[colnames(grid_with_LC) == "percent.21"] <- "DEV_OPEN_PROP"
+
+colnames(grid_with_LC)[colnames(grid_with_LC) == "percent.22"] <- "DEV_LOW_PROP"
+
+colnames(grid_with_LC)[colnames(grid_with_LC) == "percent.23"] <- "DEV_MED_PROP"
+
+colnames(grid_with_LC)[colnames(grid_with_LC) == "percent.24"] <- "DEV_HIGH_PROP"
+
+colnames(grid_with_LC)[colnames(grid_with_LC) == "percent.41"] <- "DECID_FOREST_PROP"
+
+colnames(grid_with_LC)[colnames(grid_with_LC) == "percent.42"] <- "EVERGR_FOREST_PROP"
+
+colnames(grid_with_LC)[colnames(grid_with_LC) == "percent.43"] <- "MIXED_FOREST_PROP"
+
+colnames(grid_with_LC)[colnames(grid_with_LC) == "percent.52"] <- "SHRUB_SCRUB_PROP"
+
+colnames(grid_with_LC)[colnames(grid_with_LC) == "percent.71"] <- "GRASS_LAND_PROP"
+
+colnames(grid_with_LC)[colnames(grid_with_LC) == "percent.81"] <- "PASTURE_HAY_PROP"
+
+colnames(grid_with_LC)[colnames(grid_with_LC) == "percent.82"] <- "CULT_CROPS_PROP"
+
+colnames(grid_with_LC)[colnames(grid_with_LC) == "percent.90"] <- "WOOD_WETLAND_PROP"
+
+colnames(grid_with_LC)[colnames(grid_with_LC) == "percent.95"] <- "HERB_WETLAND_PROP"
+
+colnames(grid_with_LC)[colnames(grid_with_LC) == "percent.31"] <- "BARREN_LAND_PROP"
+
+
+# Import the 2015 census-provided US shapefile for counties
+# Get it in the right CRS
+# And crop it to only the continental US
+us_counties <- shapefile('data/raw/cb_2015_us_county_5m.shp') %>%
+  spTransform(CRSobj = crs(grid_points)) %>%
+  crop(extent(-125, -66, 23, 50))
+
+
+# Remove grid points not within the continental US
+# And make county names capitalized
+grid_with_LC$county_name <- over(grid_points, us_counties)$NAME %>%
+  toupper()
+
+
+# Define a function to name the state that a coordinate belongs to
+# Provided via stackoverflow
+latlong2state <- function(pointsDF) {
+  # Prepare SpatialPolygons object with one SpatialPolygon
+  # per state (plus DC, minus HI & AK)
+  states <- map('state', fill=TRUE, col="transparent", plot=FALSE)
+  IDs <- sapply(strsplit(states$names, ":"), function(x) x[1])
+  states_sp <- map2SpatialPolygons(states, IDs=IDs,
+                                   proj4string=CRS("+proj=longlat +datum=WGS84"))
+  
+  # Convert pointsDF to a SpatialPoints object 
+  pointsSP <- SpatialPoints(pointsDF, 
+                            proj4string=CRS("+proj=longlat +datum=WGS84"))
+  
+  # Use 'over' to get _indices_ of the Polygons object containing each point 
+  indices <- over(pointsSP, states_sp)
+  
+  # Return the state names of the Polygons object containing each point
+  stateNames <- sapply(states_sp@polygons, function(x) x@ID)
+  stateNames[indices]
+}
+
+
+# Grid the state of the grid points
+# And capitalize it
+grid_with_LC$state <- latlong2state(grid_with_LC[2:3]) %>%
+  toupper()
+
+
+# Remove NA values
+grid_with_LC <- na.omit(grid_with_LC)
+
+
+# Assign the year 2018 to all rows
+grid_with_LC$YEAR <- rep(2018, nrow(grid_with_LC))
+
+
+# Import the income data
+county_income_data <- read.csv("data/raw/GeoFRED_Estimate_of_Median_Household_Income_by_County_Dollars.csv")
+
+
+# Fix (most of) the column names
+colnames(county_income_data) <- county_income_data[1, ]
+
+
+# Get rid of the unneeded columns, which are messing up the later melt
+location <- county_income_data[, 2]
+
+county_income_data_reduced <- cbind(location,
+                                    county_income_data[, 4:22])
+
+
+# Get rid of the extra header row, which is acting as a data row
+county_income_data_reduced <- dplyr::filter(county_income_data_reduced,
+                                            location != "Region Name")
+
+
+# 2018 is not provided, so let's assume that it's the same as 2015
+county_income_data_reduced$'2018' <- county_income_data_reduced$`2015`
+
+
+# Reshape the data.frame so that year is a variable
+county_income_reshaped <- melt(county_income_data_reduced, id = "location")
+
+
+# Change the state names to abbreviations
+grid_with_LC$state_abbrev <- state.abb[match(grid_with_LC$state,
+                                             toupper(state.name))]
+
+
+# Get the county, state, and year of each grid point
+grid_county_state_year <- dplyr::select(grid_with_LC,
+                                        c(county_name, state_abbrev, YEAR))
+
+
+# Get income by location and year
+county_income_reshaped$to_match_by <- toupper(sub("\\s+\\w+,", "",
+                                                  paste(county_income_reshaped$location,
+                                                        county_income_reshaped$variable)))
+
+
+# Get location and year of each grid point as one 'column'
+grid_county_state_year_together <- do.call(paste, grid_county_state_year)
+
+
+# Match income with grid points
+grid_with_LC$INCOME <- county_income_reshaped$value[match(grid_county_state_year_together,
+                                                          county_income_reshaped$to_match_by)]
+
+
+# Remove NA rows
+grid_with_LC <- na.omit(grid_with_LC)
+
+
+# Import the census-provided county area data.frame
+land_area <- read.csv("data/raw/LND01.csv") %>%
+  dplyr::select(c(ï..Areaname, LND010200D))
+
+
+################################################
+########## PROCESSSING LAND AREA DATA ##########
+################################################
+# I'm only interested in county entries, which always contain a comma
+land_area$filter_var <- grepl(",", land_area$ï..Areaname)
+
+
+# Only keep things with commas (counties) and then get rid of that 
+# newly created variable
+land_area <- filter(land_area,
+                    filter_var != FALSE) %>%
+  dplyr::select(-filter_var)
+
+
+# Make the location variable easier to type
+colnames(land_area)[colnames(land_area) == "ï..Areaname"] <- "LOC"
+
+
+# Give LOC an easy-to-deal-with format
+land_area$LOC <- sprintf("%100s", land_area$LOC)
+
+
+# Get county name
+land_area$county <- substr(land_area$LOC, 1, 96)
+
+
+# Replaces the duplicate spacing (empty space) with a
+# Single space
+land_area$county <- gsub("\\s+",
+                         " ", land_area$county)
+
+
+# Removes the first character, which is always a single space
+land_area$county <- substring(land_area$county, 2)
+
+
+# Get state of county - as abbrev
+land_area$state_abb <- substr(land_area$LOC, 99, 100)
+
+
+# Get state of county - as name
+land_area$state_name <- state.name[match(land_area$state_abb, 
+                                         state.abb)]
+
+
+# Get years
+year_2018 <- rep(2018, nrow(land_area))
+
+
+# Give land_area the year 2018
+land_area$YEAR <- year_2018
+
+
+# Get the county and state
+land_area_county_state_year <- dplyr::select(land_area,
+                                             c(county,
+                                               state_name,
+                                               YEAR))
+################################################
+###### END OF PROCESSSING LAND AREA DATA #######
+################################################
+
+
+# Set census API
+census_api_key("aa9d1fdffa292b77837177fa4e821971a207a6d0")
+
+
+# Writing a function to get ACS data of interest
+get_ACS_mob_hom_and_pop <- function(end_year) {
+  
+  # description: get mobile home count and population of each county from ACS
+  # argument: end-year of the ACS
+  # return: a dataframe containing mobile home count and population of each county
+  
+  acs_df <- get_acs(geography = "county", endyear = end_year,
+                    variables = c("B25024_010E",   # Total mobile homes
+                                  "B01003_001E"))  # Total population
+  
+  acs_df$YEAR <- rep(end_year, nrow(acs_df))
+  
+  return(acs_df)
+  
+}
+
+
+# Get ACS data
+acs_2015 <- get_ACS_mob_hom_and_pop(2015)
+acs_df <- acs_2015
+
+acs_df$YEAR <- rep(2018, nrow(acs_df))
+rm(acs_2015)
+
+acs_df <- dplyr::select(acs_df,
+                        -c(GEOID, moe))
+
+
+# Get only population counts
+population_data <- filter(acs_df,
+                          variable == "B01003_001")
+
+
+# Get only mobile home counts
+mob_home_data <- filter(acs_df,
+                        variable == "B25024_010")
+
+
+# Match mobile home count to the land area data.frame
+land_area$MOB_HOM_COUNT <- mob_home_data$estimate[match(toupper(do.call(paste, land_area_county_state_year)),
+                                                        paste(toupper(sub("\\s+\\w+,", "",
+                                                                          mob_home_data$NAME)),
+                                                              mob_home_data$YEAR))]
+
+
+# Match population count to the land area data.frame
+land_area$POP_COUNT <- population_data$estimate[match(toupper(do.call(paste, land_area_county_state_year)),
+                                                      paste(toupper(sub("\\s+\\w+,", "",
+                                                                        population_data$NAME)),
+                                                            population_data$YEAR))]
+
+
+# Make land area numeric
+land_area$LND010200D <- as.numeric(land_area$LND010200D)
+
+
+# Get mobile home density
+land_area$MOB_HOM_DENS <- land_area$MOB_HOM_COUNT / land_area$LND010200D
+
+
+# Get population density
+land_area$POP_DENS <- land_area$POP_COUNT / land_area$LND010200D
+
+
+# Get the county, state, and year for matching
+grid_county_state_year <- dplyr::select(grid_with_LC,
+                                       c(county_name,
+                                         state_abbrev,
+                                         YEAR))
+
+# Format land_area$LOC
+land_area$LOC <- gsub("\\s+", " ", land_area$LOC) %>%
+  substring(first = 2)
+
+
+# Match ACS data to grid points
+grid_with_LC$MOB_HOME_DENS <- land_area$MOB_HOM_DENS[match(toupper(do.call(paste, grid_county_state_year)),
+                                                     paste(toupper(sub(",", "",
+                                                                       land_area$LOC)),
+                                                           land_area$YEAR))]
+
+grid_with_LC$POP_DENS <- land_area$POP_DENS[match(toupper(do.call(paste, grid_county_state_year)),
+                                            paste(toupper(sub(",", "",
+                                                              land_area$LOC)),
+                                                  land_area$YEAR))]
+
+# Some counties don't appear in all data sources, therefore making some Inf values
+# Getting rid of the NAs and Infs
+grid_with_LC <- dplyr::filter(grid_with_LC,
+                              POP_DENS != Inf) %>%
+  na.omit()
+
+
+# Import the unprocessed model data
+unprocessed_tor_df <- read.csv('data/raw/tor_data_with_interact_effects.csv')
+
+
+# For non-beforehand variables, assume the mean
+grid_with_LC$assumed_duration <- rep(mean(unprocessed_tor_df$DURATION_SECONDS),
+                                     nrow(grid_with_LC))
+
+grid_with_LC$assumed_tor_length <- rep(mean(unprocessed_tor_df$TOR_LENGTH),
+                                       nrow(grid_with_LC))
+
+grid_with_LC$assumed_tor_width <- rep(mean(unprocessed_tor_df$TOR_WIDTH),
+                                      nrow(grid_with_LC))
+
+grid_with_LC$time <- rep(mean(unprocessed_tor_df$BEGIN_TIME),
+                         nrow(grid_with_LC))
+
+
+# Assigning state rank the same way it was done the first time
+tor_df <- read.csv("data/raw/tor_data_with_ACS.csv")
+DamPerState <- aggregate(tor_df$DAMAGE_PROPERTY,
+                         by = list(Category = tor_df$STATE),
+                         FUN = sum)
+
+# Order them
+cum_dam_order <- sort(DamPerState$x, decreasing = TRUE)
+
+# Make the ordered damage a dataframe
+cum_dam_rank <- as.data.frame(cum_dam_order)
+
+# Create a rank dataframe
+rank <- as.data.frame(c(1:nrow(cum_dam_rank)))
+
+# Assign rank
+cum_dam_rank <- cbind(rank, cum_dam_rank)
+
+# Make them have same column name
+DamPerState$cum_dam_order <- DamPerState$x
+
+# Get rank matched with state name
+dam_per_state_rank <- merge(x = DamPerState,
+                            y = cum_dam_rank,
+                            by = "cum_dam_order")
+
+# Name state and rank correctly
+dam_per_state_rank$STATE <- dam_per_state_rank$Category
+
+dam_per_state_rank$STATE_RANK <- dam_per_state_rank$`c(1:nrow(cum_dam_rank))`
+
+# Get only state name and rank
+dam_per_state_rank <- dplyr::select(dam_per_state_rank,
+                                    c(STATE, STATE_RANK))
+
+colnames(grid_with_LC)[20] <- 'STATE'
+
+# Merge this back to the original dataframe
+grid_with_LC <- merge(x = grid_with_LC,
+                      y = dam_per_state_rank,
+                      by = "STATE")
+
+
+# Multiple vortex tornadoes are the most destructive so lets use those
+# In the predictions, since it'd be better to overestimate than under
+grid_with_LC$mult_vort_ind <- rep(1, nrow(grid_with_LC))
+
+
+# Produce tornado area
+grid_with_LC$assumed_area <- grid_with_LC$assumed_tor_length * grid_with_LC$assumed_tor_width
+
+
+# Produce total developed intensity
+grid_with_LC$TOT_DEV_INT <- grid_with_LC$DEV_OPEN_PROP * 0.10 +
+  grid_with_LC$DEV_LOW_PROP * 0.35 +
+  grid_with_LC$DEV_MED_PROP * 0.65 +
+  grid_with_LC$DEV_HIGH_PROP * 0.90
+
+
+# Produce total wooded prop
+grid_with_LC$TOT_WOOD_AREA <- grid_with_LC$WOOD_WETLAND_PROP +
+  grid_with_LC$DECID_FOREST_PROP +
+  grid_with_LC$EVERGR_FOREST_PROP +
+  grid_with_LC$MIXED_FOREST_PROP
+
+
+# Produce total wood-dev interaction
+grid_with_LC$WOOD_DEV_INT <- grid_with_LC$TOT_DEV_INT * grid_with_LC$TOT_WOOD_AREA
+
+
+# Produce an approximation of wealth contained in the the tornado area
+grid_with_LC$EXP_INC_AREA <- grid_with_LC$INCOME * grid_with_LC$assumed_area
+
+
+# For the predictions, we will do the 15th of each month
+days <- rep(15, 12)
+
+month <- seq(1, 12)
+
+day_combos <- cbind(as.data.frame(month),
+                    as.data.frame(days))
+
+
+# Have this temp_df for for-loop purposes
+temp_df <- grid_with_LC
+
+
+# Copy all the grid data for all 12 of the '<month> the 15th'
+for (i in 1:12) {
+  
+  if (i == 1) {
+    
+    grid_with_LC$month <- rep(day_combos[i, 1])
+    grid_with_LC$day <- rep(day_combos[i, 2])
+    
+  } else {
+    
+    temp_df$month <- rep(day_combos[i, 1])
+    temp_df$day <- rep(day_combos[i, 2])
+    grid_with_LC <- rbind(grid_with_LC, temp_df)
+    
+  }
+  
+}
+
+
+# Remove the temporary data.frame
+rm(temp_df)
+
+
+# Keep names the same as the original model data
+colnames(grid_with_LC)[3] <- 'BEGIN_LON'
+colnames(grid_with_LC)[4] <- 'BEGIN_LAT'
+colnames(grid_with_LC)[26] <- 'DURATION_SECONDS'
+colnames(grid_with_LC)[27] <- 'TOR_LENGTH'
+colnames(grid_with_LC)[28] <- 'TOR_WIDTH'
+colnames(grid_with_LC)[29] <- 'TIME'
+colnames(grid_with_LC)[31] <- 'MULTI_VORT_IND'
+colnames(grid_with_LC)[32] <- 'TOR_AREA'
+colnames(grid_with_LC)[37] <- 'MONTH'
+colnames(grid_with_LC)[38] <- 'DAY_OF_MONTH'
+
+
+grid_dates_epoch <- paste(grid_with_LC$YEAR, grid_with_LC$MONTH,
+                          grid_with_LC$DAY_OF_MONTH, sep = '-') %>%
+  strptime(format = '%Y-%m-%d')
+
+grid_with_LC$JULIAN_DAY <- grid_dates_epoch %>%
+  strftime(format = '%j')
+
+grid_with_LC$BEGIN_DATE <- grid_dates_epoch %>%
+  as.numeric() %>%
+  `/`(60) %>%
+  `/`(60) %>%
+  `/`(24) %>%
+  floor()
+
+colnames(grid_with_LC)[colnames(grid_with_LC) == 'TIME'] <- 'BEGIN_TIME'
+
+monthly_df <- read.csv('data/raw/monthly_spline_ref.csv')
+date_df <- read.csv('data/raw/date_spline_ref.csv')
+time_df <- read.csv('data/raw/time_spline_ref.csv')
+
+grid_with_LC
+# HOW TO GO ABOUT THIS?
+
+
+# Importing unprocessed model data to do the processing
+# With the same means and standard deviations
+tor_df <- read.csv("data/raw/tor_data_with_interact_effects.csv")
+
+
+# Define a simple mean normalization function
+mean_normalize <- function(col_name){
+  
+  # descr:  simple mean normalization... (x - mean(x))/sd(x)
+  # arg:    thing to normalize
+  # return: that thing normalized
+  
+  numerator <- grid_with_LC[, col_name] - mean(tor_df[, col_name])
+  
+  normalized <- numerator / sd(tor_df[, col_name])
+  
+  return(normalized)
+  
+}
+
+
+# Define a mean normalization following a log-transformation
+mean_norm_log_xform <- function(col_name) {
+  
+  # descr:  log transform (base e) then mean normalize
+  # arg:    thing to process
+  # return: that thing processed
+  
+  log_xformed <- log(grid_with_LC[, col_name] + 1,
+                     base = exp(1))
+  
+  numerator <- log_xformed - mean(log(tor_df[, col_name] + 1,
+                                      base = exp(1)))
+  
+  log_and_normalized <- numerator / sd(log(tor_df[, col_name] + 1,
+                                           base = exp(1)))
+  
+  return(log_and_normalized)
+  
+}
+
+
+# Define a mean normalization following a log-transformation
+# following a multiplication
+mean_norm_log_xform_prop <- function(col_name) {
+  
+  # descr:  multiple by 10000, then log transform (base e), then mean normalize
+  #         this is for proportions, the 10000 multiplications makes the log
+  #         transformation more effective
+  # arg:    thing to process
+  # return: that thing processed
+  
+  processed_10000 <- grid_with_LC[, col_name] * 10000
+  
+  log_xformed <- log(processed_10000 + 1,
+                     base = exp(1))
+  
+  numerator <- log_xformed - mean(log((10000 * tor_df[, col_name]) + 1,
+                                      base = exp(1)))
+  
+  log_and_normalized_10000 <- numerator / sd(log((10000 * tor_df[, col_name]) + 1,
+                                                 base = exp(1)))
+  
+  return(log_and_normalized_10000)
+  
+}
+
+
+
+# Process the variables
+grid_with_LC$DURATION_SECONDS <- mean_norm_log_xform('DURATION_SECONDS')
+
+grid_with_LC$BEGIN_LAT <- mean_normalize('BEGIN_LAT')
+
+grid_with_LC$BEGIN_LON <- mean_normalize('BEGIN_LON')
+
+grid_with_LC$TOR_LENGTH <- mean_norm_log_xform('TOR_LENGTH')
+
+grid_with_LC$TOR_WIDTH <- mean_norm_log_xform('TOR_WIDTH')
+
+grid_with_LC$OPEN_WATER_PROP <- mean_norm_log_xform_prop('OPEN_WATER_PROP')
+
+grid_with_LC$DEV_OPEN_PROP <- mean_norm_log_xform_prop('DEV_OPEN_PROP')
+
+grid_with_LC$DEV_LOW_PROP <- mean_norm_log_xform_prop('DEV_LOW_PROP')
+
+grid_with_LC$DEV_MED_PROP <- mean_norm_log_xform_prop('DEV_MED_PROP')
+
+grid_with_LC$DEV_HIGH_PROP <- mean_norm_log_xform_prop('DEV_HIGH_PROP')
+
+grid_with_LC$DECID_FOREST_PROP <- mean_norm_log_xform_prop('DECID_FOREST_PROP')
+
+grid_with_LC$EVERGR_FOREST_PROP <- mean_norm_log_xform_prop('EVERGR_FOREST_PROP')
+
+grid_with_LC$MIXED_FOREST_PROP <- mean_norm_log_xform_prop('MIXED_FOREST_PROP')
+
+grid_with_LC$SHRUB_SCRUB_PROP <- mean_norm_log_xform_prop('SHRUB_SCRUB_PROP')
+
+grid_with_LC$GRASS_LAND_PROP <- mean_norm_log_xform_prop('GRASS_LAND_PROP')
+
+grid_with_LC$PASTURE_HAY_PROP <- mean_norm_log_xform_prop('PASTURE_HAY_PROP')
+
+grid_with_LC$CULT_CROPS_PROP <- mean_norm_log_xform_prop('CULT_CROPS_PROP')
+
+grid_with_LC$WOOD_WETLAND_PROP <- mean_norm_log_xform_prop('WOOD_WETLAND_PROP')
+
+grid_with_LC$HERB_WETLAND_PROP <- mean_norm_log_xform_prop('HERB_WETLAND_PROP')
+
+grid_with_LC$BARREN_LAND_PROP <- mean_norm_log_xform_prop('BARREN_LAND_PROP')
+
+grid_with_LC$INCOME <- mean_norm_log_xform('INCOME')
+
+grid_with_LC$TOR_AREA <- mean_norm_log_xform_prop('TOR_AREA')
+
+grid_with_LC$TOT_DEV_INT <- mean_norm_log_xform_prop('TOT_DEV_INT')
+
+grid_with_LC$TOT_WOOD_AREA <- mean_norm_log_xform_prop('TOT_WOOD_AREA')
+
+grid_with_LC$WOOD_DEV_INT <- mean_norm_log_xform_prop('WOOD_DEV_INT')
+
+grid_with_LC$EXP_INC_AREA <- mean_norm_log_xform('EXP_INC_AREA')
+
+grid_with_LC$DAY_OF_YEAR <- mean_norm_log_xform('DAY_OF_YEAR')
+
+grid_with_LC$STATE_RANK <- mean_norm_log_xform_prop('STATE_RANK')
+
+grid_with_LC$MOB_HOME_DENS <- mean_norm_log_xform_prop('MOB_HOME_DENS')
+
+grid_with_LC$POP_DENS <- mean_norm_log_xform('POP_DENS')
+
+
+# Reshape the gridded data.frame so that we can see all
+# The distributions easily
+grid_hist_data <- melt(grid_with_LC)
+
+grid_hist_data <- dplyr::select(grid_hist_data,
+                                -c(STATE,
+                                   county_name,
+                                   state_abbrev))
+
+grid_hist_data <- dplyr::filter(grid_hist_data,
+                                variable != "ID")
+
+
+# Plot the distributions
+ggplot(grid_hist_data,
+       aes(x = value)) +
+  geom_histogram(bins = 100,
+                 fill = "dark red") +
+  facet_wrap(~variable) +
+  theme_bw()
+
+
+# Get rid of the variables not being analyzed
+grid_with_LC <- dplyr::select(grid_with_LC,
+                              -c(STATE,
+                                 ID,
+                                 county_name,
+                                 state_abbrev))
+
+
+# Get the columns in the same order as the model data
+final_grid_df <- dplyr::select(grid_with_LC,
+                               c(DURATION_SECONDS,
+                                 BEGIN_LAT,
+                                 BEGIN_LON,
+                                 TOR_LENGTH,
+                                 TOR_WIDTH,
+                                 YEAR,
+                                 MULTI_VORT_IND,
+                                 OPEN_WATER_PROP,
+                                 DEV_OPEN_PROP,
+                                 DEV_LOW_PROP,
+                                 DEV_MED_PROP,
+                                 DEV_HIGH_PROP,
+                                 BARREN_LAND_PROP,
+                                 DECID_FOREST_PROP,
+                                 EVERGR_FOREST_PROP,
+                                 MIXED_FOREST_PROP,
+                                 SHRUB_SCRUB_PROP,
+                                 GRASS_LAND_PROP,
+                                 PASTURE_HAY_PROP,
+                                 CULT_CROPS_PROP,
+                                 WOOD_WETLAND_PROP,
+                                 HERB_WETLAND_PROP,
+                                 INCOME,
+                                 MOB_HOME_DENS,
+                                 POP_DENS,
+                                 TOR_AREA,
+                                 TOT_DEV_INT,
+                                 TOT_WOOD_AREA,
+                                 WOOD_DEV_INT,
+                                 EXP_INC_AREA,
+                                 DAY_OF_YEAR,
+                                 MONTH,
+                                 STATE_RANK,
+                                 TIME))
+
+
+# Save the gridded data.frame so we can predict off it in PyTorch
+write_csv(final_grid_df,
+          'data/raw/final_grid_df.csv')
+
+
