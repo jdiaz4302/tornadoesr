@@ -297,7 +297,7 @@ land_area_county_state_year <- select(land_area,
 
 
 # Set census API
-census_api_key("ENTER YOUR CENSUS API KEY")
+census_api_key("ENTER YOUR CENSUS API KEY HERE")
 
 
 # Writing a function to get ACS data of interest
@@ -431,6 +431,9 @@ grid_with_LC$time <- rep(mean(unprocessed_tor_df$BEGIN_TIME),
                          nrow(grid_with_LC)) %>%
   floor()
 
+grid_with_LC$mult_vort_ind <- rep(mean(unprocessed_tor_df$MULTI_VORT_IND),
+                                  nrow(grid_with_LC))
+
 
 # Assigning state rank the same way it was done the first time
 # Before these were different data sets, no longer the case
@@ -469,17 +472,12 @@ dam_per_state_rank$STATE_RANK <- dam_per_state_rank$`c(1:nrow(cum_dam_rank))`
 dam_per_state_rank <- dplyr::select(dam_per_state_rank,
                                     c(STATE, STATE_RANK))
 
-colnames(grid_with_LC)[20] <- 'STATE'
+colnames(grid_with_LC)[colnames(grid_with_LC) == 'state'] <- 'STATE'
 
 # Merge this back to the original dataframe
 grid_with_LC <- merge(x = grid_with_LC,
                       y = dam_per_state_rank,
                       by = "STATE")
-
-
-# Multiple vortex tornadoes are the most destructive so lets use those
-# In the predictions, since it'd be better to overestimate than under
-grid_with_LC$mult_vort_ind <- rep(1, nrow(grid_with_LC))
 
 
 # Produce tornado area
