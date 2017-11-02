@@ -21,8 +21,13 @@ cities_df <- read.csv('https://raw.githubusercontent.com/plotly/datasets/master/
 cities_df <- dplyr::filter(cities_df,
                            pop > 100000)
 
-stored_names <- cities_df$name
 
+# Storing this for later remerge
+stored_df <- dplyr::select(cities_df,
+                           c(name, pop))
+
+
+# Assign unique identifier to each row
 cities_df$name <- 1:nrow(cities_df)
 
 
@@ -287,7 +292,7 @@ land_area_county_state_year <- select(land_area,
 
 
 # Set census API
-census_api_key("aa9d1fdffa292b77837177fa4e821971a207a6d0")
+census_api_key("ENTER YOUR CENSUS API KEY")
 
 
 # Writing a function to get ACS data of interest
@@ -725,11 +730,11 @@ train_data <- read.csv("data/raw/tor_train_set.csv")
 cities_with_LC$DAMAGE_PROPERTY <- rep(NA, nrow(cities_with_LC))
 
 # Getting city names reintegrated
-name_ref_df <- data.frame(city_name = stored_names,
-                          name = 1:length(stored_names))
+colnames(stored_df)[colnames(stored_df) == 'name'] <- 'city_name'
+stored_df$name <- 1:nrow(stored_df)
 
 cities_with_LC <- merge(x = cities_with_LC,
-                        y = name_ref_df,
+                        y = stored_df,
                         by = 'name')
 
 cities_with_LC <- dplyr::select(cities_with_LC,
@@ -740,6 +745,7 @@ colnames(cities_with_LC)[colnames(cities_with_LC) == 'city_name'] <- 'name'
 # Have city name, then the same order of features as the training data
 final_cities_df <- dplyr::select(cities_with_LC,
                                  c('name',
+                                   'pop',
                                    colnames(train_data)))
 
 
