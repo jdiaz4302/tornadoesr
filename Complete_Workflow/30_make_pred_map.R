@@ -33,7 +33,8 @@ grid_with_pred$DAMAGE_PROPERTY <- log10(grid_with_pred$DAMAGE_PROPERTY)
  
  
 # Have the gridded points as a SpatialPointsDataFrame
-grid_points <- SpatialPointsDataFrame(coords = grid_with_pred[, 4:3],
+grid_points <- SpatialPointsDataFrame(coords = grid_with_pred[, c('BEGIN_LON',
+                                                                  'BEGIN_LAT')],
                                       data = dplyr::select(grid_with_pred,
                                                            -c(BEGIN_LAT,
                                                               BEGIN_LON)),
@@ -47,6 +48,7 @@ us_shape <- shapefile('data/raw/cb_2015_us_state_5m.shp') %>%
   spTransform(CRSobj = crs(grid_points)) %>%
   crop(extent(-125, -66, 23, 50))
 
+tiff("Figure5.tiff", width = 8, height = 8, units = 'in', res = 450)
 
 # Plot a map for each month
 ggplot(data = grid_with_pred) +
@@ -75,6 +77,7 @@ ggplot(data = grid_with_pred) +
         strip.text = element_text(colour = 'grey80')) +
   labs(title = 'Expected Tornado Damage Values for 2018')
 
+dev.off()
 
 # Some stuff that may be useful in the future
 
