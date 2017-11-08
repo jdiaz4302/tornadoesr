@@ -48,20 +48,30 @@ us_shape <- shapefile('data/raw/cb_2015_us_state_5m.shp') %>%
   spTransform(CRSobj = crs(grid_points)) %>%
   crop(extent(-125, -66, 23, 50))
 
+
+# Make the Julian Day integers into a factor
+# And give them better label names (X 15th); where X = a month
+grid_with_pred$JULIAN_DAY <- factor(grid_with_pred$JULIAN_DAY)
+
+levels(grid_with_pred$JULIAN_DAY) <- paste(month.name,
+                                           rep('15th'))
+
+
+# Save the output figure with great resolution
 tiff("Figure5.tiff", width = 8, height = 8, units = 'in', res = 450)
+
 
 # Plot a map for each month
 ggplot(data = grid_with_pred) +
   theme_bw() +
   geom_polygon(data = us_shape,
                aes(long, lat, group = group),
-               col = 'grey80', fill = 'black') +
+               col = 'grey20', fill = 'black') +
   geom_point(aes(x = grid_with_pred$BEGIN_LON,
                  y = grid_with_pred$BEGIN_LAT,
                  col = grid_with_pred$DAMAGE_PROPERTY),
-             size = 1,
-             pch = 15,
-             alpha = 0.95) +
+             size = 0.80,
+             pch = 15) +
   facet_wrap(~JULIAN_DAY, ncol = 3) +
   viridis::scale_color_viridis('Expected\nLog10-Scale\nProperty Damage\n(US dollars + 1)') +
   theme(plot.title = element_text(size = 19, hjust = 0.5),
@@ -74,10 +84,12 @@ ggplot(data = grid_with_pred) +
         axis.ticks = element_blank(),
         panel.background = element_rect(fill = 'black'),
         strip.background = element_rect(fill = 'black'),
-        strip.text = element_text(colour = 'grey80')) +
-  labs(title = 'Expected Tornado Damage Values for 2018')
+        strip.text = element_text(colour = 'grey80'))
 
+
+# Finish the save
 dev.off()
+
 
 # Some stuff that may be useful in the future
 
