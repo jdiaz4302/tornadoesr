@@ -31,6 +31,17 @@ grid_with_pred$BEGIN_LON <- grid_with_pred$BEGIN_LON * sd(tor_df$BEGIN_LON) +
 # Then convert to log10 scale
 grid_with_pred$DAMAGE_PROPERTY <- log10(grid_with_pred$DAMAGE_PROPERTY)
  
+
+# Damages by month
+ggplot(grid_with_pred,
+       aes(x = JULIAN_DAY,
+           y = DAMAGE_PROPERTY)) +
+  geom_point(alpha = 0.2) +
+  theme_bw() +
+  labs(x = 'Day of the Year',
+       y = 'Expected Tornado-Induced Property Damage\n(Log-scale US dollars)') +
+  stat_smooth()
+
  
 # Have the gridded points as a SpatialPointsDataFrame
 grid_points <- SpatialPointsDataFrame(coords = grid_with_pred[, c('BEGIN_LON',
