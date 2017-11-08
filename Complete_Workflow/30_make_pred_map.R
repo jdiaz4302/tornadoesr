@@ -62,15 +62,15 @@ tiff("Figure5.tiff", width = 8, height = 8, units = 'in', res = 450)
 
 
 # Plot a map for each month
-ggplot(data = grid_with_pred) +
+ggplot(grid_with_pred,
+       aes(x = BEGIN_LON,
+           y = BEGIN_LAT,
+           col = DAMAGE_PROPERTY)) +
   theme_bw() +
   geom_polygon(data = us_shape,
                aes(long, lat, group = group),
                col = 'grey20', fill = 'black') +
-  geom_point(aes(x = grid_with_pred$BEGIN_LON,
-                 y = grid_with_pred$BEGIN_LAT,
-                 col = grid_with_pred$DAMAGE_PROPERTY),
-             size = 0.80,
+  geom_point(size = 0.65,
              pch = 15) +
   facet_wrap(~JULIAN_DAY, ncol = 3) +
   viridis::scale_color_viridis('Expected\nLog10-Scale\nProperty Damage\n(US dollars + 1)') +
