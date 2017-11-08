@@ -360,7 +360,7 @@ ggplot(best_models_test_perf,
   geom_abline(intercept = 0,
               slope = 1) +
   geom_point(size = 3,
-             alpha = .5) +
+             pch = 21) +
   scale_x_continuous(lim = c(0, 10),
                      breaks = c(0, 2, 4, 6, 8, 10)) +
   scale_y_continuous(lim = c(0, 10),
@@ -413,7 +413,7 @@ best_of_metrics$Label <- ifelse(best_of_metrics$notebook_id == 11,
                                                                                  ifelse(best_of_metrics$notebook_id == 19,
                                                                                         'Wide Once Reg.',
                                                                                         ifelse(best_of_metrics$notebook_id == 20,
-                                                                                               'Wide Twice Reg',
+                                                                                               'Wide Twice Reg.',
                                                                                                ifelse(best_of_metrics$notebook_id == 21,
                                                                                                       'Deep ELU',
                                                                                                       ifelse(best_of_metrics$notebook_id == 22,
