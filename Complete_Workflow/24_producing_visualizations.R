@@ -189,8 +189,7 @@ predictions_df$label <- factor(predictions_df$label,
 ggplot(predictions_df,
        aes(x = true_values,
            y = predicted_values)) +
-  geom_point(pch = 21,
-             size = 0.9) +
+  geom_point(size = 0.9) +
   facet_wrap(~label, ncol = 4) +
   scale_x_continuous(lim = c(-1, 10),
                      breaks = c(0, 2, 4, 6, 8, 10)) +
@@ -202,10 +201,11 @@ ggplot(predictions_df,
   labs(x = 'Observed Value',
        y = 'Predicted Value',
        title = 'Cross-Validation Set Performance',
-       subtitle = 'Units = Magnitude of US dollars') +
+       subtitle = 'Units = log10 US dollars') +
   theme(aspect.ratio = 4/5,
         plot.title = element_text(hjust = 0.5, size = 17),
         plot.subtitle = element_text(hjust = 0.5, size = 12),
+        panel.grid = element_blank(),
         axis.title = element_text(size = 15),
         strip.background = element_blank(),
         panel.border = element_rect(colour = "black"))
