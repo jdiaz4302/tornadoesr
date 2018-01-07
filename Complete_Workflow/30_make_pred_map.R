@@ -17,7 +17,7 @@ grid_with_pred <- read.csv('Complete_Workflow/grid_with_expectated_values.csv') 
 
 
 # Import the unprocessed model data
-tor_df <- read.csv("data/raw/tor_data_with_interact_effects.csv")
+tor_df <- read.csv("data/raw/tor_data_with_derived.csv")
 
 
 # Undo the processing to get lat and lon in natural scale
