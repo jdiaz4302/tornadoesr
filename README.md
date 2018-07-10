@@ -1,4 +1,4 @@
-# TornadoesR
+# Predicting property damage from tornadoes with deep learning
 
 ### A project by Jeremy Diaz
 #### CU Boulder Earth Lab. Analytics Hub Intern. Supervisor: Maxwell Joseph, Ph.D
