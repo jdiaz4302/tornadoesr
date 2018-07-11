@@ -1,7 +1,9 @@
 # Predicting property damage from tornadoes with deep learning
 
-### Authors: Jeremy Diaz and Maxwell Joseph, Ph.D
-#### Affiliation: Earth Lab, Cooperative Institute of Research for Environmental Sciences, University of Colorado Boulder
+**Authors**: Jeremy Diaz and Maxwell Joseph, Ph.D<br>
+**Affiliation**: Earth Lab, Cooperative Institute of Research for Environmental Sciences, University of Colorado Boulder<br>
+**Preprint**: [arXiv - stat.ML](https://arxiv.org/abs/1807.03456)
+
 
 ## Summary
 
