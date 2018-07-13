@@ -2,7 +2,8 @@
 
 **Authors**: Jeremy Diaz and Maxwell Joseph, Ph.D<br>
 **Affiliation**: Earth Lab, Cooperative Institute of Research for Environmental Sciences, University of Colorado Boulder<br>
-**Preprint**: [arXiv - stat.ML](https://arxiv.org/abs/1807.03456)
+**Preprint**: [arXiv - stat.ML](https://arxiv.org/abs/1807.03456)<br>
+**Research data**: [figshare](https://doi.org/10.6084/m9.figshare.6792206.v4) (this workflow pulls all the data, however Storm Events updates periodically) 
 
 
 ## Summary
