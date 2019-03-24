@@ -4,7 +4,7 @@
 library(tidycensus)
 
 
-census_api_key("ENTER YOUR API KEY")
+census_api_key("aa9d1fdffa292b77837177fa4e821971a207a6d0")
 
 
 acs5_2009 <- load_variables(year = 2017, dataset = "acs5", cache = FALSE)
@@ -72,6 +72,34 @@ females_total_70_74 <- get_acs(geography = "county", year = 2009, variables = c(
 females_total_75_79 <- get_acs(geography = "county", year = 2009, variables = c("B01001_047"))
 females_total_80_84 <- get_acs(geography = "county", year = 2009, variables = c("B01001_048"))
 females_total_85_up <- get_acs(geography = "county", year = 2009, variables = c("B01001_049"))
+
+
+# Lower quartile house value
+lowerq_house_value <- get_acs(geography = "county", year = 2009, variables = c("B25076_001"))
+# Median house value
+median_house_value <- get_acs(geography = "county", year = 2009, variables = c("B25077_001"))
+# Upper quartile house value
+upperq_house_value <- get_acs(geography = "county", year = 2009, variables = c("B25078_001"))
+
+
+# Poverty
+total_poverty <- get_acs(geography = "county", year = 2009, variables = c("B17001_001"))
+
+
+# Gini index for income inequality
+gini_index <- get_acs(geography = "county", year = 2009, variables = c("B19083_001"))
+
+
+# Employement
+num_employed_over_16 <- get_acs(geography = "county", year = 2009, variables = c("B23001_001"))
+
+
+# Commute
+commute_binned_by_mins <- get_acs(geography = "county", year = 2009, variables = c("B08303_001"))
+
+
+# Departure time of commute
+commute_binned_by_depart <- get_acs(geography = "county", year = 2009, variables = c("B08011_001"))
 
 
 
