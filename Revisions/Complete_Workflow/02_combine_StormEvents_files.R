@@ -24,3 +24,4 @@ tor_df <- lapply(files,
   as.data.frame
 
 
+
