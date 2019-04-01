@@ -111,7 +111,7 @@ tor_df <- dplyr::select(tor_df, c(DAMAGE_PROPERTY,
                                   MULTI_VORT_IND))  
 
 
-# PyTorch really doesn't like NA values
+# Excluding any tornadoes with NA values for the kept columns
 tor_df <- na.omit(tor_df)
 
 
