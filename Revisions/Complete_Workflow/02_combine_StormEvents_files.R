@@ -18,7 +18,8 @@ tor_df <- lapply(files,
                  col_types = cols(DAMAGE_CROPS = "c",
                                   EPISODE_ID = "c",
                                   TOR_OTHER_CZ_FIPS = "c",
-                                  TOR_WIDTH = "d")) %>%
+                                  TOR_WIDTH = "d",
+                                  CATEGORY = 'i')) %>%
   bind_rows() %>%
   as.data.frame
 
