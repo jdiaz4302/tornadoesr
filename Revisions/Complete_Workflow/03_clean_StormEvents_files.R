@@ -2,7 +2,7 @@
 
 
 # Calling the data
-source("Complete_Workflow/02_combine_StormEvents_files.R")
+source("Revisions/Complete_Workflow/02_combine_StormEvents_files.R")
 
 
 # Filter to only tornadoes
