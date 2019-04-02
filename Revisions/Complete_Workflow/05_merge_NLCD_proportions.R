@@ -8,7 +8,7 @@ library(raster)
 
 
 # Import tornado data
-source("Complete_Workflow/03_clean_StormEvents_files.R")
+source("Revisions/Complete_Workflow/03_clean_StormEvents_files.R")
 
 
 # Separate it for most accurate NLCD extractions
