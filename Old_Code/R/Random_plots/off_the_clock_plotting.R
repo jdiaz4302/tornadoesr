@@ -10,7 +10,7 @@ library(animation)
 
 
 # Call the data
-source("R/Random_plots/3_format_for_prop_dam_visualizations.R")
+source("Complete_Workflow/03_clean_StormEvents_files.R")
 
 
 # Get rid of 2017 since its an incomplete year
