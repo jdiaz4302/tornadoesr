@@ -1,12 +1,16 @@
-# TornadoesR
+# Predicting property damage from tornadoes with deep learning
 
-### A project by Jeremy Diaz
-#### CU Boulder Earth Lab. Analytics Hub Intern. Supervisor: Maxwell Joseph, Ph.D
+**Authors**: Jeremy Diaz and Maxwell Joseph, Ph.D<br>
+**Affiliation**: Earth Lab, Cooperative Institute of Research for Environmental Sciences, University of Colorado Boulder<br>
+**Preprint**: [arXiv - stat.ML](https://arxiv.org/abs/1807.03456)<br>
+**Research data**: [figshare](https://doi.org/10.6084/m9.figshare.6792206.v4) (this workflow pulls all the data, however Storm Events updates periodically) 
+
 
 ## Summary
 
-This repository roughly serves as the documentation to my internship project's workflow. R scripts, R Markdown files, and Jupyter notebooks are spread among 2 main folders: "Complete Workflow" and "Old Code". Within "Old Code", "Python" and "R" contain code related to their respective programming languages. Both of these files contain scripts and notebooks that may no longer be relevent to the project. "Python" primarily consists of the code to produce and evaluate models, while "R" primarily consists of the code for data retrieval, integration, and processing. "Complete Workflow" serves as an ordered, complete workflow to allow maximum reproducibility and clarity.
+This repository serves as the workflow-documentation to the paper "Predicting property damage from tornadoes with deep learning
+" by Jeremy Diaz and Maxwell Joseph. R scripts, R Markdown files, and Jupyter notebooks are spread among 2 main folders: "Complete Workflow" and "Old Code". Within "Old Code", "Python" and "R" contain code related to their respective programming languages. Both of these files contain scripts and notebooks that are no longer relevent to the project, however might prove useful to somebody somewhere some day. "Python" primarily consists of the code to produce and evaluate models, while "R" primarily consists of the code for data retrieval, integration, and processing. "Complete Workflow" serves as an **ordered, complete workflow to allow maximum reproducibility and clarity**.
 
-This project aims to predict dollar-amount, tornado-induced property damage based on variables that you can know before a tornado event, variables that describe the tornado event, and both of those sets of variables combined. The predictive models consist of various multivariate regressions and artificial neural networks made in PyTorch, a deep learning framework.
+This project aims to predict dollar-amount, tornado-induced property damage based on variables that you can know before a tornado event, variables that describe the tornado event, and both of those sets of variables combined. The predictive models consist of various multivariable regressions and artificial neural networks made in PyTorch, a deep learning framework.
 
 [Click here for some interactive maps produced using the best model](https://rawgit.com/jdiaz4302/tornadoesr/master/interactive_model_maps.html)
