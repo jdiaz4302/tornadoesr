@@ -122,11 +122,15 @@ dev.off()
 testing <- ggplot(grid_with_pred,
                   aes(x = BEGIN_LON,
                       y = BEGIN_LAT,
-                      frame = JULIAN_DAY)) +
+                      frame = as.Date(grid_with_pred$JULIAN_DAY,
+                                      origin = '2017-12-31'))) +
   geom_point(aes(col = DAMAGE_PROPERTY),
              pch = 16, size = 2.75) +
-  viridis::scale_color_viridis('Log Scale\nProperty Damage') +
+  viridis::scale_color_viridis('Log Scale\nProperty Damage', option = 'B', direction = -1,
+                               breaks = c(3, 4, 5, 6),
+                               labels = c('$1,000', '$10,000', '$100,000', '$1,000,000')) +
   theme_minimal() +
+  ggtitle("Expected Tornado-Induced Property Damage,") +
   theme(axis.title = element_blank(),
         axis.text = element_blank(),
         aspect.ratio = 9/16,
@@ -134,16 +138,16 @@ testing <- ggplot(grid_with_pred,
         panel.grid.minor = element_blank(),
         panel.border = element_blank(),
         axis.ticks = element_blank(),
-        plot.title = element_text(hjust = 0.5, size = 22),
+        plot.title = element_text(hjust = 0.5, size = 22, color = 'white'),
         panel.background = element_rect(fill = 'black'),
-        legend.text = element_text(size = 16),
-        legend.title = element_text(size = 16)) +
-  ggtitle("Expected Tornado-Induced Property Damage, 2018 -")
+        plot.background = element_rect(fill = 'black'),
+        legend.text = element_text(size = 16, color = 'white'),
+        legend.title = element_text(size = 16, color = 'white'))
 
 
 # Animate the gif
 gganimate(testing,
-          filename = 'tornado_present.gif',
+          filename = 'prediction_map.gif',
           interval = 0.3,
           ani.width = 1725,
           ani.height = 950)
