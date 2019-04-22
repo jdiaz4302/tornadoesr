@@ -1,10 +1,10 @@
 
 
-
+install.packages('tidycensus')
 library(tidycensus)
 
 
-census_api_key("REDACTED")
+census_api_key("aa9d1fdffa292b77837177fa4e821971a207a6d0")
 
 
 acs5_2010 <- load_variables(year = 2010, dataset = "acs5", cache = FALSE)
@@ -143,16 +143,105 @@ perct_poverty <- get_acs(geography = "county", year = 2009, variables = c("B1700
 gini_index <- get_acs(geography = "county", year = 2009, variables = c("B19083_001"))
 
 
-# Employement - DEF NOT SECURE
-num_employed_over_16 <- get_acs(geography = "county", year = 2009, variables = c("B23001_001"))
+# Employement - SECURE
+perct_employ <- (get_acs(geography = "county",
+                         year = 2009,
+                         variables = c("B12006_006"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B12006_007"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B12006_011"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B12006_012"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B12006_017"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B12006_018"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B12006_022"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B12006_023"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B12006_028"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B12006_029"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B12006_033"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B12006_034"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B12006_039"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B12006_040"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B12006_044"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B12006_045"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B12006_050"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B12006_051"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B12006_055"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B12006_056"))$estimate) /
+  total_adults
 
 
-# Commute - DECIDE WHAT TO DO WITH BINS
-commute_binned_by_mins <- get_acs(geography = "county", year = 2009, variables = c("B08303_001"))
+# Percent commute >30mins - SECURE
+perct_comu30 <- (get_acs(geography = "county",
+                         year = 2009,
+                         variables = c("B08303_008"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B08303_009"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B08303_010"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B08303_011"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B08303_012"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B08303_013"))$estimate) /
+  (total_adults)
 
 
-# Departure time of commute - DECIDE WHAT TO DO WITH BINS
-commute_binned_by_depart <- get_acs(geography = "county", year = 2009, variables = c("B08011_001"))
-
+# Percent commute in dark - SECURE
+perct_comudk <- (get_acs(geography = "county",
+                         year = 2009,
+                         variables = c("B08011_002"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B08011_003"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B08011_004"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B08011_015"))$estimate) /
+  (total_adults)
 
 
