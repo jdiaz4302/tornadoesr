@@ -4,7 +4,7 @@
 library(tidycensus)
 
 
-census_api_key("aa9d1fdffa292b77837177fa4e821971a207a6d0")
+census_api_key("REDACTED")
 
 
 acs5_2010 <- load_variables(year = 2010, dataset = "acs5", cache = FALSE)
