@@ -127,15 +127,11 @@ land_area_county_state_year <- select(land_area,
 
 
 # Set census API
-census_api_key("ENTER YOUR CENSUS KEY")
-
-
-# Finding variable of interest
-# acs_variables <- load_variables(2009, "acs", cache = TRUE)
+census_api_key("REDACTED")
 
 
 # Writing a function, because this will be repeated
-get_ACS_mob_hom_and_pop <- function(end_year) {
+get_ACS_for_tor <- function(end_year) {
   
   # description: get mobile home count and population of each county from ACS
   # argument: end-year of the ACS
@@ -143,9 +139,75 @@ get_ACS_mob_hom_and_pop <- function(end_year) {
   #     median household income of each county
   
   acs_df <- get_acs(geography = "county", year = end_year,
-                    variables = c("B25024_010E",   # Total mobile homes
-                                  "B01003_001E",   # Total population
-                                  "B19013_001E"))  # Median household income
+                    variables = c("B25024_010",   # Total mobile homes
+                                  "B01003_001",   # Total population
+                                  "B19013_001",   # Median household income
+                                  "B25035_001",   # Median year structures built
+                                  "B25034_001",   # Number of homes
+                                  "B02001_001",   # Number of people
+                                  "B02001_002",   # Number of white peope
+                                  "B01001_002",   # Number of males
+                                  "B09001_001",   # Number under 18 yrs old
+                                  "B15002_011",   # Males with high school equiv. edu
+                                  "B15002_028",   # Females with high school equiv. edu
+                                  "B15002_014",   # Males with associates
+                                  "B15002_031",   # Females with associates
+                                  "B15002_015",   # Males with bachelors
+                                  "B15002_032",   # Females with bachelors
+                                  "B15002_016",   # Males with masters
+                                  "B15002_017",   # Males with professional deg
+                                  "B15002_018",   # Males with doctorates
+                                  "B15002_033",   # Females with masters
+                                  "B15002_034",   # Females with professional deg
+                                  "B15002_035",   # Females with doctorates
+                                  "B01001_020",   # Males 65-66
+                                  "B01001_021",   # Males 67-69
+                                  "B01001_022",   # Males 70-74
+                                  "B01001_023",   # Males 75-79
+                                  "B01001_024",   # Males 80-84
+                                  "B01001_025",   # Males 85+
+                                  "B01001_044",   # Females 65-66
+                                  "B01001_045",   # Females 67-69
+                                  "B01001_046",   # Females 70-74
+                                  "B01001_047",   # Females 75-79
+                                  "B01001_048",   # Females 80-84
+                                  "B01001_049",   # Females 85+
+                                  "B25076_001",   # Lower quartile home values
+                                  "B25077_001",   # Median home values
+                                  "B25078_001",   # Upper quartile home values
+                                  "B17001_001",   # People w/ poverty status in the past 12 months
+                                  "B19083_001",   # Gini index of income inequality
+                                  "B12006_006",   # Unemployed males in labor force (nev. married)
+                                  "B12006_007",   # Males not in the labor force (nev. married)
+                                  "B12006_011",   # Unemployed females in labor force (nev. marr.),
+                                  "B12006_012",   # Females not in the labor force (nev. married)
+                                  "B12006_017",   # Unemployed males in labor force (married)
+                                  "B12006_018",   # Males not in the labor force (married)
+                                  "B12006_022",   # Unemployed females in labor force (married)
+                                  "B12006_023",   # Females not in the labor force (married)
+                                  "B12006_028",   # Unemployed males in labor force (separated)
+                                  "B12006_029",   # Males not in the labor force (separated)
+                                  "B12006_033",   # Unemployed females in labor force ( separated)
+                                  "B12006_034",   # Females not in the labor force (separated)
+                                  "B12006_039",   # Unemployed males in labor force (widowed)
+                                  "B12006_040",   # Males not in the labor force (widowed)
+                                  "B12006_044",   # Unemployed females in labor force (widowed)
+                                  "B12006_045",   # Females not in the labor force (widowed)
+                                  "B12006_050",   # Unemployed males in labor force (divorced)
+                                  "B12006_051",   # Males not in labor force (divorced)
+                                  "B12006_055",   # Unemployed females in labor force (divorced)
+                                  "B12006_056",   # Females not in labor force (divorced)
+                                  "B08303_008",   # 30-34min travel time to work
+                                  "B08303_009",   # 35-39min travel time to work
+                                  "B08303_010",   # 40-44min travel time to work
+                                  "B08303_011",   # 45-59min travel time to work
+                                  "B08303_012",   # 60-89min travel time to work
+                                  "B08303_013",   # 90min+ travel time to work
+                                  "B08011_002",   # depart for work between midnight & 5am
+                                  "B08011_003",   # depart for work between 5 and 5:30 am
+                                  "B08011_004",   # depart for work between 5:30 and 6 am
+                                  "B08011_015"   # depart for work between 4pm and midnight
+                                  ))  
   
   acs_df$YEAR <- rep(end_year, nrow(acs_df))
   
@@ -156,7 +218,7 @@ get_ACS_mob_hom_and_pop <- function(end_year) {
 
 # Get ACS data for all available years
 # Assigning unavailable years to their closest neighbor
-acs_2009 <- get_ACS_mob_hom_and_pop(2009)
+acs_2009 <- get_ACS_for_tor(2009)
 
 acs_1997 <- acs_2009
 acs_1997$YEAR <- rep(1997, nrow(acs_1997))
@@ -194,23 +256,24 @@ acs_2007$YEAR <- rep(2007, nrow(acs_2007))
 acs_2008 <- acs_2009
 acs_2008$YEAR <- rep(2008, nrow(acs_2008))
 
-acs_2010 <- get_ACS_mob_hom_and_pop(2010)
+acs_2010 <- get_ACS_for_tor(2010)
 
-acs_2011 <- get_ACS_mob_hom_and_pop(2011)
+acs_2011 <- get_ACS_for_tor(2011)
 
-acs_2012 <- get_ACS_mob_hom_and_pop(2012)
+acs_2012 <- get_ACS_for_tor(2012)
 
-acs_2013 <- get_ACS_mob_hom_and_pop(2013)
+acs_2013 <- get_ACS_for_tor(2013)
 
-acs_2014 <- get_ACS_mob_hom_and_pop(2014)
+acs_2014 <- get_ACS_for_tor(2014)
 
-acs_2015 <- get_ACS_mob_hom_and_pop(2015)
+acs_2015 <- get_ACS_for_tor(2015)
 
-acs_2016 <- acs_2015
-acs_2016$YEAR <- rep(2016, nrow(acs_2016))
+acs_2016 <- get_ACS_for_tor(2016)
 
-acs_2017 <- acs_2015
-acs_2017$YEAR <- rep(2017, nrow(acs_2017))
+acs_2017 <- get_ACS_for_tor(2017)
+
+acs_2018 <- acs_2017
+acs_2018$YEAR <- rep(2018, nrow(acs_2018))
 
 
 # Put them all together
@@ -234,7 +297,8 @@ acs_df <- rbind(acs_1997,
                 acs_2014,
                 acs_2015,
                 acs_2016,
-                acs_2017) %>%
+                acs_2017,
+                acs_2018) %>%
   dplyr::select(-c(GEOID, moe))
 
 
