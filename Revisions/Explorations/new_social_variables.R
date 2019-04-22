@@ -4,101 +4,154 @@
 library(tidycensus)
 
 
-census_api_key("ENTER API KEY HERE")
+census_api_key("aa9d1fdffa292b77837177fa4e821971a207a6d0")
 
 
-acs5_2009 <- load_variables(year = 2017, dataset = "acs5", cache = FALSE)
+acs5_2010 <- load_variables(year = 2010, dataset = "acs5", cache = FALSE)
+acs5_2017 <- load_variables(year = 2017, dataset = "acs5", cache = FALSE)
 
 
-# Point estimate year home built
+# Point estimate year home built - SECURE
 median_year_struct_built <- get_acs(geography = "county", year = 2009, variables = c("B25035_001"))
 
 
-# Number of homes builts
+# Total number of homes builts - SECURE
 num_homes_built <- get_acs(geography = "county", year = 2009, variables = c("B25034_001"))
 # We can get these in bins but the bins move with different endyears
 
 
-# Total people
+# Total people - SECURE
 total_people <- get_acs(geography = "county", year = 2009, variables = c("B02001_001"))
-# Total white people
+# Total white people - SECURE
 total_white <- get_acs(geography = "county", year = 2009, variables = c("B02001_002"))
-# Percent white people - PSUEDOCODE
-percent_white <- total_white / total_people
+# Percent white people - SECURE
+percent_white <- total_white$estimate / total_people$estimate
 
 
-# Total people
-total_people <- get_acs(geography = "county", year = 2009, variables = c("B01001_001"))
-# Total male
+# Total male - SECURE
 total_male <- get_acs(geography = "county", year = 2009, variables = c("B01001_002"))
-# Percent male - PSUEDOCODE
-percent_male <- total_male / total_people
+# Percent male - SECURE
+percent_male <- total_male$estimate / total_people$estimate
 
 
-# Educational attainment for people over 25
-total_people <- get_acs(geography = "county", year = 2009, variables = c("B15003_001"))
-# Total high school
-total_high_school <- get_acs(geography = "county", year = 2009, variables = c("B15003_017"))
-# Total GED
-total_GED <- get_acs(geography = "county", year = 2009, variables = c("B15003_018"))
-# Total associates
-total_assoc <- get_acs(geography = "county", year = 2009, variables = c("B15003_021"))
-# Total bach
-total_bach <- get_acs(geography = "county", year = 2009, variables = c("B15003_022"))
-# Total masters
-total_master <- get_acs(geography = "county", year = 2009, variables = c("B15003_023"))
-# Total prof
-total_prof <- get_acs(geography = "county", year = 2009, variables = c("B15003_024"))
-# Total phd
-total_phd <- get_acs(geography = "county", year = 2009, variables = c("B15003_025"))
+# Total under 18 - SECURE
+total_kids <- get_acs(geography = "county", year = 2009, variables = c("B09001_001"))$estimate
+perct_kids <- total_kids / total_people$estimate
+total_adults <- (total_people$estimate - total_kids)
 
 
-# Total under 18
-total_kids <- get_acs(geography = "county", year = 2009, variables = c("B09001_001"))
+# Total high school - SECURE
+perct_high_school <- (get_acs(geography = "county",
+                              year = 2009,
+                              variables = c("B15002_011"))$estimate +
+                        get_acs(geography = "county",
+                                year = 2009,
+                                variables = c("B15002_028"))$estimate) /
+  total_adults
+# Total associates - SECURE
+perct_assoc <- (get_acs(geography = "county",
+                        year = 2009,
+                        variables = c("B15002_014"))$estimate +
+                  get_acs(geography = "county",
+                          year = 2009,
+                          variables = c("B15002_031"))$estimate) /
+  total_adults
+# Total bach - SECURE
+perct_bach <- (get_acs(geography = "county",
+                       year = 2009,
+                       variables = c("B15002_015"))$estimate +
+                 get_acs(geography = "county",
+                         year = 2009,
+                         variables = c("B15002_032"))$estimate) /
+  total_adults
+# Total grad - SECURE
+perct_gradte <- (get_acs(geography = "county",
+                         year = 2009,
+                         variables = c("B15002_016"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B15002_017"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B15002_018"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B15002_033"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B15002_034"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B15002_035"))$estimate) /
+  total_adults
 
 
-# Total over 65
-# Males
-males_total_65_66 <- get_acs(geography = "county", year = 2009, variables = c("B01001_020"))
-males_total_67_69 <- get_acs(geography = "county", year = 2009, variables = c("B01001_021"))
-males_total_70_74 <- get_acs(geography = "county", year = 2009, variables = c("B01001_022"))
-males_total_75_79 <- get_acs(geography = "county", year = 2009, variables = c("B01001_023"))
-males_total_80_84 <- get_acs(geography = "county", year = 2009, variables = c("B01001_024"))
-males_total_85_up <- get_acs(geography = "county", year = 2009, variables = c("B01001_025"))
-# Females
-females_total_65_66 <- get_acs(geography = "county", year = 2009, variables = c("B01001_044"))
-females_total_67_69 <- get_acs(geography = "county", year = 2009, variables = c("B01001_045"))
-females_total_70_74 <- get_acs(geography = "county", year = 2009, variables = c("B01001_046"))
-females_total_75_79 <- get_acs(geography = "county", year = 2009, variables = c("B01001_047"))
-females_total_80_84 <- get_acs(geography = "county", year = 2009, variables = c("B01001_048"))
-females_total_85_up <- get_acs(geography = "county", year = 2009, variables = c("B01001_049"))
+# Total over 65 - SECURE
+perct_senior <- (get_acs(geography = "county",
+                         year = 2009,
+                         variables = c("B01001_020"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B01001_021"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B01001_022"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B01001_023"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B01001_024"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B01001_025"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B01001_044"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B01001_045"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B01001_046"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B01001_047"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B01001_048"))$estimate +
+                   get_acs(geography = "county",
+                           year = 2009,
+                           variables = c("B01001_049"))$estimate) /
+  total_people$estimate
 
 
-# Lower quartile house value
+# Lower quartile house value - SECURE
 lowerq_house_value <- get_acs(geography = "county", year = 2009, variables = c("B25076_001"))
-# Median house value
+# Median house value - SECURE
 median_house_value <- get_acs(geography = "county", year = 2009, variables = c("B25077_001"))
-# Upper quartile house value
+# Upper quartile house value - SECURE
 upperq_house_value <- get_acs(geography = "county", year = 2009, variables = c("B25078_001"))
 
 
-# Poverty
-total_poverty <- get_acs(geography = "county", year = 2009, variables = c("B17001_001"))
+# Poverty - SECURE
+perct_poverty <- get_acs(geography = "county", year = 2009, variables = c("B17001_001"))$estimate /
+  total_people$estimate
 
 
-# Gini index for income inequality
+# Gini index for income inequality - SECURE
 gini_index <- get_acs(geography = "county", year = 2009, variables = c("B19083_001"))
 
 
-# Employement
+# Employement - DEF NOT SECURE
 num_employed_over_16 <- get_acs(geography = "county", year = 2009, variables = c("B23001_001"))
 
 
-# Commute
+# Commute - DECIDE WHAT TO DO WITH BINS
 commute_binned_by_mins <- get_acs(geography = "county", year = 2009, variables = c("B08303_001"))
 
 
-# Departure time of commute
+# Departure time of commute - DECIDE WHAT TO DO WITH BINS
 commute_binned_by_depart <- get_acs(geography = "county", year = 2009, variables = c("B08011_001"))
 
 
