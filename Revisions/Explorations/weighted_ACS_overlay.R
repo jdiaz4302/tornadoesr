@@ -4,6 +4,7 @@
 # Packages
 library(tidycensus)
 library(raster)
+library(sf)
 
 
 # Census API key
