@@ -20,14 +20,14 @@ tor_df$state_abbrev <- state.abb[match(tor_df$STATE,
 # link: https://www.census.gov/support/USACdataDownloads.html#LND
 # Converted from xls to csv via Excel because R proved annoying
 land_area <- read.csv("data/raw/LND01.csv") %>%
-  select(c(ï..Areaname, LND010200D))
+  select(c(Areaname, LND010200D))
 
 
 ################################################
 ########## PROCESSSING LAND AREA DATA ##########
 ################################################
 # I'm only interested in county entries, which are always contain a comma
-land_area$filter_var <- grepl(",", land_area$ï..Areaname)
+land_area$filter_var <- grepl(",", land_area$Areaname)
 
 
 # Only keep things with commas (counties) and then get rid of that 
@@ -38,7 +38,7 @@ land_area <- filter(land_area,
 
 
 # Make the location variable easier to type
-colnames(land_area)[colnames(land_area) == "ï..Areaname"] <- "LOC"
+colnames(land_area)[colnames(land_area) == "Areaname"] <- "LOC"
 
 
 # Give LOC an easy-to-deal-with format
@@ -87,6 +87,7 @@ year_2014 <- rep(2014, nrow(land_area))
 year_2015 <- rep(2015, nrow(land_area))
 year_2016 <- rep(2016, nrow(land_area))
 year_2017 <- rep(2017, nrow(land_area))
+year_2018 <- rep(2018, nrow(land_area))
 
 
 # Get county/year combinations
@@ -138,7 +139,7 @@ get_ACS_for_tor <- function(end_year) {
   # return: a dataframe containing mobile home count, total population, and
   #     median household income of each county
   
-  acs_df <- get_acs(geography = "county", year = end_year,
+  acs_df <- get_acs(geography = "county", year = end_year, geometry = TRUE,
                     variables = c("B25024_010",   # Total mobile homes
                                   "B01003_001",   # Total population
                                   "B19013_001",   # Median household income
@@ -218,45 +219,46 @@ get_ACS_for_tor <- function(end_year) {
 
 # Get ACS data for all available years
 # Assigning unavailable years to their closest neighbor
-acs_2009 <- get_ACS_for_tor(2009)
+acs_2010 <- get_ACS_for_tor(2010)
 
-acs_1997 <- acs_2009
+acs_1997 <- acs_2010
 acs_1997$YEAR <- rep(1997, nrow(acs_1997))
 
-acs_1998 <- acs_2009
+acs_1998 <- acs_2010
 acs_1998$YEAR <- rep(1998, nrow(acs_1998))
 
-acs_1999 <- acs_2009
+acs_1999 <- acs_2010
 acs_1999$YEAR <- rep(1999, nrow(acs_1999))
 
-acs_2000 <- acs_2009
+acs_2000 <- acs_2010
 acs_2000$YEAR <- rep(2000, nrow(acs_2000))
 
-acs_2001 <- acs_2009
+acs_2001 <- acs_2010
 acs_2001$YEAR <- rep(2001, nrow(acs_2001))
 
-acs_2002 <- acs_2009
+acs_2002 <- acs_2010
 acs_2002$YEAR <- rep(2002, nrow(acs_2002))
 
-acs_2003 <- acs_2009
+acs_2003 <- acs_2010
 acs_2003$YEAR <- rep(2003, nrow(acs_2003))
 
-acs_2004 <- acs_2009
+acs_2004 <- acs_2010
 acs_2004$YEAR <- rep(2004, nrow(acs_2004))
 
-acs_2005 <- acs_2009
+acs_2005 <- acs_2010
 acs_2005$YEAR <- rep(2005, nrow(acs_2005))
 
-acs_2006 <- acs_2009
+acs_2006 <- acs_2010
 acs_2006$YEAR <- rep(2006, nrow(acs_2006))
 
-acs_2007 <- acs_2009
+acs_2007 <- acs_2010
 acs_2007$YEAR <- rep(2007, nrow(acs_2007))
 
-acs_2008 <- acs_2009
+acs_2008 <- acs_2010
 acs_2008$YEAR <- rep(2008, nrow(acs_2008))
 
-acs_2010 <- get_ACS_for_tor(2010)
+acs_2009 <- acs_2010
+acs_2009$YEAR <- rep(2009, nrow(acs_2009))
 
 acs_2011 <- get_ACS_for_tor(2011)
 
@@ -302,39 +304,108 @@ acs_df <- rbind(acs_1997,
   dplyr::select(-c(GEOID, moe))
 
 
+# Clearing up RAM
+rm(list = c('acs_1997',
+            'acs_1998',
+            'acs_1999',
+            'acs_2000',
+            'acs_2001',
+            'acs_2002',
+            'acs_2003',
+            'acs_2004',
+            'acs_2005',
+            'acs_2006',
+            'acs_2007',
+            'acs_2008',
+            'acs_2009',
+            'acs_2010',
+            'acs_2011',
+            'acs_2012',
+            'acs_2013',
+            'acs_2014',
+            'acs_2015',
+            'acs_2016',
+            'acs_2017',
+            'acs_2018'))
+gc()
+
+
+# Make land area numeric
+land_area$LND010200D <- as.numeric(land_area$LND010200D)
+
+
 # Get only population counts
 population_data <- filter(acs_df,
                           variable == "B01003_001")
+# Match population count to the land area data.frame
+land_area$POP_COUNT <- population_data$estimate[match(toupper(do.call(paste, land_area_county_state_year)),
+                                                      paste(toupper(sub("\\s+\\w+,", "",
+                                                                        population_data$NAME)),
+                                                            population_data$YEAR))]
+# Get population density
+land_area$POP_DENS <- land_area$POP_COUNT / land_area$LND010200D
 
 
 # Get only mobile home counts
 mob_home_data <- filter(acs_df,
                         variable == "B25024_010")
+# Match mobile home count to the land area data.frame
+land_area$MOB_HOM_COUNT <- mob_home_data$estimate[match(toupper(do.call(paste, land_area_county_state_year)),
+                                                        paste(toupper(sub("\\s+\\w+,", "",
+                                                                          mob_home_data$NAME)),
+                                                              mob_home_data$YEAR))]
+# Get mobile home density
+land_area$MOB_HOM_DENS <- land_area$MOB_HOM_COUNT / land_area$LND010200D
 
 
 # Get only median household income
 income_data <- filter(acs_df,
                       variable == "B19013_001")
 
+# Get only estimate for median year home built
+median_year <- filter(acs_df,
+                      variable == "B25035_001")
 
-# Match mobile home count to the land area data.frame
-land_area$MOB_HOM_COUNT <- mob_home_data$estimate[match(toupper(do.call(paste, land_area_county_state_year)),
-                                                        paste(toupper(sub("\\s+\\w+,", "",
-                                                                          mob_home_data$NAME)),
-                                                              mob_home_data$YEAR))]
+# Get only total number of homes builts
+num_homes <- filter(acs_df,
+                    variable == "B25034_001")
+
+# Get only total people
+total_people <- filter(acs_df,
+                       variable == "B02001_001")
+# Get only total white people
+total_white <- filter(acs_df,
+                      variable == "B02001_002")
+
+# Get only total male
+total_male <- filter(acs_df,
+                     variable == "B01001_002")
+
+# Get only total kids
+total_kids <- filter(acs_df,
+                     variable == "B09001_001")
 
 
-# Match population count to the land area data.frame
-land_area$POP_COUNT <- population_data$estimate[match(toupper(do.call(paste, land_area_county_state_year)),
-                                                      paste(toupper(sub("\\s+\\w+,", "",
-                                                                  population_data$NAME)),
-                                                            population_data$YEAR))]
 
-# Match median household income to the land area data.frame
-land_area$MED_INC <- income_data$estimate[match(toupper(do.call(paste, land_area_county_state_year)),
-                                                paste(toupper(sub("\\s+\\w+,", "",
-                                                                  population_data$NAME)),
-                                                      population_data$YEAR))]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # Notably, this left out St. Louis city, Missouri - big tornado town, rest are mostly Alaska
@@ -345,18 +416,6 @@ land_area$MED_INC <- income_data$estimate[match(toupper(do.call(paste, land_area
 
 #land_area$POP_COUNT[land_area$county == "St. Louis city"] <-
 #  population_data[population_data$NAME == "St. Louis city, Missouri", ]$estimate
-
-
-# Make land area numeric
-land_area$LND010200D <- as.numeric(land_area$LND010200D)
-
-
-# Get mobile home density
-land_area$MOB_HOM_DENS <- land_area$MOB_HOM_COUNT / land_area$LND010200D
-
-
-# Get population density
-land_area$POP_DENS <- land_area$POP_COUNT / land_area$LND010200D
 
 
 # Get the county, state, and year for matching
