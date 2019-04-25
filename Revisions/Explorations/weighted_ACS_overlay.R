@@ -2,6 +2,7 @@
 
 
 # Packages
+install.packages('tidycensus')
 library(tidycensus)
 library(raster)
 library(sf)
@@ -64,11 +65,11 @@ Gaussian_template <- focalWeight(NLCD,
 # Defining function for the weighted extraction
 weighted_extract <- function(coords, ACS_data) {
   # Creating grid of lats and lon
-  coords_1 <- seq(as.numeric(coords[1]) - dim(Gaussian_template)[1] / 2 * 30,
-                  as.numeric(coords[1]) + dim(Gaussian_template)[1] / 2 * 30,
+  coords_1 <- seq(as.numeric(coords[1]) - (dim(Gaussian_template)[1] - 1) / 2 * 30,
+                  as.numeric(coords[1]) + (dim(Gaussian_template)[1] - 1) / 2 * 30,
                   by = 30)
-  coords_2 <- seq(as.numeric(coords[2]) - dim(Gaussian_template)[2] / 2 * 30,
-                  as.numeric(coords[2]) + dim(Gaussian_template)[2] / 2 * 30,
+  coords_2 <- seq(as.numeric(coords[2]) - (dim(Gaussian_template)[2] - 1) / 2 * 30,
+                  as.numeric(coords[2]) + (dim(Gaussian_template)[2] - 1) / 2 * 30,
                   by = 30)
   
   # Making them into data.frame columns
@@ -94,9 +95,10 @@ weighted_extract <- function(coords, ACS_data) {
 # Testing out the process - Let's make sure the counties are right and see how many counties we
 # tend to get
 for (i in 1:50) {
-  testing_output <- weighted_extract(coords_2010[i, ], median_year_struct_built)
-  print(length(unique(testing_output)))
-  print('')
+  ACS_output <- weighted_extract(coords_2010[i, ], median_year_struct_built)
+  ACS_table <- median_year_struct_built[ACS_output, ]
+  ACS_weighted <- stats::weighted.mean(ACS_table$estimate, as.vector(Gaussian_template))
+  print(ACS_weighted)
 }
 
 
