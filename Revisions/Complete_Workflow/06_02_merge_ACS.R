@@ -553,7 +553,6 @@ weighted_extract <- function(coords, year, ACS_data) {
 # Performing the weighted extraction for all ACS variables
 new_features <- matrix(ncol = 21, nrow = nrow(tor_df))
 for (i in 1:nrow(tor_df)) {
-  s <- Sys.time()
   a <- weighted_extract(coords[i, ], years[i], acs_df)
   
   # Number of mobile homes
@@ -760,10 +759,10 @@ for (i in 1:nrow(tor_df)) {
                                                 na.rm = TRUE)
   percent_odd_commuter_weighted <- odd_commuter_weighted / num_adults
   new_features[i, 21] <- percent_odd_commuter_weighted
-  e <- Sys.time()
-  print(e - s)
 }
 
+
+# Hard-coding the column names - triple check'd but fragile to change
 new_features_colnames <- c('PERC_MOB_HOMES', 'POP_DENS', 'MEDIAN_HOUSE_INC',
                            'MED_HOME_AGE', 'NUM_HOMES', 'PERC_WHITE',
                            'PERC_MALE', 'PERC_KIDS', 'PERC_HIGH_SCHOOL',
@@ -771,11 +770,16 @@ new_features_colnames <- c('PERC_MOB_HOMES', 'POP_DENS', 'MEDIAN_HOUSE_INC',
                            'PERC_SENIOR', 'LOWERQ_HOME_VAL', 'MED_HOME_VAL',
                            'UPPERQ_HOME_VAL', 'PERC_POVERTY', 'GINI_INDEX',
                            'PERC_NOT_WORKING', 'PERC_COMM_30', 'PERC_COMM_EARLY')
+# Changing the matrix to a data.frame and renaming the columns appropriately
 ACS_vars <- data.frame(new_features)
 colnames(ACS_vars) <- new_features_colnames
 
 
+# Merging tor data and ACS data
+tor_df_with_ACS <- cbind(tor_df, ACS_vars)
+
+
 # Save it
-# write_csv(tor_df, "data/raw/tor_data_with_ACS.csv")
+# write_csv(tor_df_with_ACS, "data/raw/tor_data_with_ACS.csv")
 
 
