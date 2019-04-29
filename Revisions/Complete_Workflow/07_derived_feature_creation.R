@@ -7,8 +7,10 @@ library(splines)
 library(dplyr)
 
 
-# Import tornado events with LC proportions
+# Import tornado events with LC and ACS
 tor_df <- read.csv("data/raw/tor_data_with_ACS.csv")
+# Omit rows with missing values
+tor_df <- na.omit(tor_df)
 
 
 # 1. Produce tornado area
@@ -34,7 +36,7 @@ tor_df$WOOD_DEV_INT <- tor_df$TOT_DEV_INT * tor_df$TOT_WOOD_AREA
 
 
 # 5. Produce an approximation of wealth contained in the the tornado area
-tor_df$EXP_INC_AREA <- tor_df$INCOME * tor_df$TOR_AREA
+tor_df$EXP_INC_AREA <- tor_df$MEDIAN_HOUSE_INC * tor_df$TOR_AREA
 
 
 # 6. Temporal Variables
@@ -126,48 +128,6 @@ julian_ref_df <- bs_to_format_df('JULIAN_SPLINE_',
 # Connect these b-spline values to observed date values
 tor_df <- merge(tor_df, julian_ref_df,
                 by = 'JULIAN_DAY')
-
-
-# 7. Process STATE - need an informative way to numerify this
-# Get cumulative damage for each state
-# Get the sum
-DamPerState <- aggregate(tor_df$DAMAGE_PROPERTY,
-                         by = list(Category = tor_df$STATE),
-                         FUN = sum)
-
-# Order them
-cum_dam_order <- sort(DamPerState$x, decreasing = TRUE)
-
-# Make the ordered damage a dataframe
-cum_dam_rank <- as.data.frame(cum_dam_order)
-
-# Create a rank dataframe
-rank <- as.data.frame(c(1:nrow(cum_dam_rank)))
-
-# Assign rank
-cum_dam_rank <- cbind(rank, cum_dam_rank)
-
-# Make them have same column name
-DamPerState$cum_dam_order <- DamPerState$x
-
-# Get rank matched with state name
-dam_per_state_rank <- merge(x = DamPerState,
-                            y = cum_dam_rank,
-                            by = "cum_dam_order")
-
-# Name state and rank correctly
-dam_per_state_rank$STATE <- dam_per_state_rank$Category
-
-dam_per_state_rank$STATE_RANK <- dam_per_state_rank$`c(1:nrow(cum_dam_rank))`
-
-# Get only state name and rank
-dam_per_state_rank <- dplyr::select(dam_per_state_rank,
-                                    c(STATE, STATE_RANK))
-
-# Merge this back to the original dataframe
-tor_df <- merge(x = tor_df,
-                   dam_per_state_rank,
-                   by = "STATE")
 
 
 # Just to be safe
