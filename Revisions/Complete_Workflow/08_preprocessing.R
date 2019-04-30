@@ -78,6 +78,8 @@ tor_df$TOR_LENGTH <- mean_norm_log_xform(tor_df$TOR_LENGTH)
 
 tor_df$TOR_WIDTH <- mean_norm_log_xform(tor_df$TOR_WIDTH)
 
+tor_df$YEAR <- mean_normalize(tor_df$YEAR)
+
 
 # Process the outcome variable
 tor_df$DAMAGE_PROPERTY <- mean_norm_log_xform(tor_df$DAMAGE_PROPERTY)
@@ -115,6 +117,12 @@ tor_df$HERB_WETLAND_PROP <- mean_norm_log_xform_prop(tor_df$HERB_WETLAND_PROP)
 tor_df$BARREN_LAND_PROP <- mean_norm_log_xform_prop(tor_df$BARREN_LAND_PROP)
 
 
+# Forgot to drop the snow/ice column before now
+# It shows up in only ~50 instances
+tor_df <- dplyr::select(tor_df,
+                        -c(ICE_SNOW_PROP))
+
+
 # Process the interaction effects
 tor_df$TOR_AREA <- mean_norm_log_xform_prop(tor_df$TOR_AREA)
 
@@ -127,18 +135,48 @@ tor_df$WOOD_DEV_INT <- mean_norm_log_xform_prop(tor_df$WOOD_DEV_INT)
 tor_df$EXP_INC_AREA <- mean_norm_log_xform(tor_df$EXP_INC_AREA)
 
 
-# Storm events variables that took more work to get
-tor_df$STATE_RANK <- mean_norm_log_xform_prop(tor_df$STATE_RANK)
-
-tor_df$YEAR <- mean_normalize(tor_df$YEAR)
-
-
 # Process ACS data
-tor_df$MOB_HOME_DENS <- mean_norm_log_xform_prop(tor_df$MOB_HOME_DENS)
+tor_df$PERC_MOB_HOMES <- mean_normalize(tor_df$PERC_MOB_HOMES)
 
 tor_df$POP_DENS <- mean_norm_log_xform(tor_df$POP_DENS)
 
-tor_df$INCOME <- mean_norm_log_xform(tor_df$INCOME)
+tor_df$MEDIAN_HOUSE_INC <- mean_norm_log_xform(tor_df$MEDIAN_HOUSE_INC)
+
+tor_df$MED_HOME_AGE <- mean_norm_log_xform(tor_df$MED_HOME_AGE)
+
+tor_df$NUM_HOMES <- mean_norm_log_xform(tor_df$NUM_HOMES)
+
+tor_df$PERC_WHITE <- mean_normalize(tor_df$PERC_WHITE)
+
+tor_df$PERC_MALE <- mean_normalize(tor_df$PERC_MALE)
+
+tor_df$PERC_KIDS <- mean_normalize(tor_df$PERC_KIDS)
+
+tor_df$PERC_HIGH_SCHOOL <- mean_normalize(tor_df$PERC_HIGH_SCHOOL)
+
+tor_df$PERC_ASSOC <- mean_normalize(tor_df$PERC_ASSOC)
+
+tor_df$PERC_BACH <- mean_normalize(tor_df$PERC_BACH)
+
+tor_df$PERC_GRAD <- mean_normalize(tor_df$PERC_GRAD)
+
+tor_df$PERC_SENIOR <- mean_normalize(tor_df$PERC_SENIOR)
+
+tor_df$LOWERQ_HOME_VAL <- mean_norm_log_xform(tor_df$LOWERQ_HOME_VAL)
+
+tor_df$MED_HOME_VAL <- mean_norm_log_xform(tor_df$MED_HOME_VAL)
+
+tor_df$UPPERQ_HOME_VAL <- mean_norm_log_xform(tor_df$UPPERQ_HOME_VAL)
+
+tor_df$PERC_POVERTY <- mean_norm_log_xform(tor_df$PERC_POVERTY)
+
+tor_df$GINI_INDEX <- mean_norm_log_xform(tor_df$GINI_INDEX)
+
+tor_df$PERC_NOT_WORKING <- mean_normalize(tor_df$PERC_NOT_WORKING)
+
+tor_df$PERC_COMM_30 <- mean_normalize(tor_df$PERC_COMM_30)
+
+tor_df$PERC_COMM_EARLY <- mean_normalize(tor_df$PERC_COMM_EARLY)
 
 
 # Take a look at all the distributions
@@ -172,11 +210,11 @@ ggplot(tor_hist_data,
 
 # Get rid of the variables not being analyzed
 tor_df <- dplyr::select(tor_df,
-                           -c(STATE,
-                              BEGIN_DATE_TIME,
-                              EVENT_ID,
-                              CZ_NAME,
-                              state_abbrev))
+                        -c(STATE,
+                           BEGIN_DATE_TIME,
+                           EVENT_ID,
+                           CZ_NAME,
+                           state_abbrev))
 
 
 # Save it
