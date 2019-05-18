@@ -8,7 +8,7 @@ library(readr)
 
 
 # Import data
-tor_df <- read.csv("data/raw/tor_data_with_derived.csv")
+tor_df <- read.csv("data/raw/tor_data_inflation_adj.csv")
 
 
 # Functions that need defining
@@ -118,7 +118,7 @@ tor_df$BARREN_LAND_PROP <- mean_norm_log_xform_prop(tor_df$BARREN_LAND_PROP)
 
 
 # Forgot to drop the snow/ice column before now
-# It shows up in only ~50 instances
+# It shows up in less than 50 instances
 tor_df <- dplyr::select(tor_df,
                         -c(ICE_SNOW_PROP))
 
