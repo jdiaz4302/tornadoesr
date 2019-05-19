@@ -9,19 +9,23 @@ library(readr)
 library(maps)
 library(maptools)
 library(reshape2)
+#install.packages('tidycensus')
 library(tidycensus)
 library(ggplot2)
+#install.packages('questionr')
+library(questionr)
+library(sf)
 
 
 # Get all possible longitude values
 LON <- seq(from = -125,
            to = -66,
-           by = 0.25)
+           by = 10)  ################################ Change this
 
 
 # Iteratively add each possible latitude value in an
 # Adjacent column to the longitude values
-for (i in seq(from = 23, to = 50, by = 0.25)) {
+for (i in seq(from = 23, to = 50, by = 10)) {        ############################ Change this
   
   if (i == 23) {
     
@@ -77,52 +81,75 @@ NLCD_2011 <- raster("data/raw/nlcd_2011_landcover_2011_edition_2014_10_10/nlcd_2
 grid_NLCD_crs <- spTransform(grid_points,
                              crs(NLCD_2011))
 
+
 # Get the extraction buffer
-source("Complete_Workflow/03_clean_StormEvents_files.R")
-avg_tor_length_meters <- mean(tor_df$TOR_LENGTH) * 1609.34
+source("Revisions/Complete_Workflow/03_clean_StormEvents_files.R")
+stand_dev_of_tor_length <- sd(tor_df$TOR_LENGTH) * 1609.34
 
 
-# Extract the LC values for each pixel
-Sys.time()
-grid_LC_values <- raster::extract(NLCD_2011,
-                                  grid_NLCD_crs,
-                                  buffer = avg_tor_length_meters)
-Sys.time()
+# We need the coordinates for the weighted extractions and Guassian template georef.
+# Keeping the EVENT_IDs too
+coords_grid <- grid_NLCD_crs@coords
+coords_grid <- coords_grid[1:(length(coords_grid) / 2), ]
+IDs_grid <- grid_NLCD_crs@data$`grid_df$ID`
 
 
-# Get the proportion of LC values in the buffer area
-# Of each lat/lon combo
-LC_prop_grid <- lapply(grid_LC_values, function(x) {
+# Creating a Gaussian template with NLCD CRS and tornado path length sd
+Gaussian_template <- focalWeight(NLCD_2011,
+                                 d = stand_dev_of_tor_length,
+                                 type = 'Gauss')
+
+
+# Defining function for the weighted extraction
+weighted_extract <- function(coords) {
+  # Creating grid of lats and lon
+  coords_1 <- seq(coords[1] - dim(Gaussian_template)[1] / 2 * 30,
+                  coords[1] + dim(Gaussian_template)[1] / 2 * 30,
+                  by = 30)
+  coords_2 <- seq(coords[2] - dim(Gaussian_template)[2] / 2 * 30,
+                  coords[2] + dim(Gaussian_template)[2] / 2 * 30,
+                  by = 30)
   
-  prop.table(table(x))
+  # Making them into data.frame columns
+  lon <- as.vector(t(replicate(dim(Gaussian_template)[2], coords_1)))
+  lat <- as.vector(replicate(dim(Gaussian_template)[1], coords_2))
+  coords_df <- data.frame(lon, lat)
   
-  })
-
-Sys.time()
-
-
-# Make it into a data.frame
-LC_grid_df <- data.frame(ID = rep(grid_points$`grid_df$ID`,
-                                  lapply(LC_prop_grid,
-                                         length)),
-                         cover = names(unlist(LC_prop_grid)),
-                         percent = unlist(LC_prop_grid))
-
-
-# Get rid of this error classification
-LC_grid_df <- dplyr::filter(LC_grid_df,
-                            cover != 0)
-
-# Get rid of the snow/ice classification
-LC_grid_df <- dplyr::filter(LC_grid_df,
-                            cover != 12)
+  # Formalizing the spatial object
+  Gaussian_template_for_tor <- SpatialPointsDataFrame(coords_df,
+                                                      coords_df,
+                                                      proj4string = crs(grid_points))
+  
+  # Extract the all LC values within the Gaussian template extent
+  Gaussian_template_area_extraction <- raster::extract(NLCD_2011,
+                                                       extent(Gaussian_template_for_tor))
+  return(Gaussian_template_area_extraction)
+}
 
 
-# Reshape the data.frame
-LC_grid_df <- reshape(LC_grid_df,
-                      idvar = "ID",
-                      timevar = "cover",
-                      direction = "wide")
+# Sitting up the data.frames for weighted extraction percentages
+NLCD_2011_factor_levels <- levels(NLCD_2011)
+NLCD_2011_factor_levels_filtered <- NLCD_2011_factor_levels[[1]][NLCD_2011_factor_levels[[1]]$COUNT != 0, ]$ID
+LC_grid_df <- matrix(ncol = length(NLCD_2011_factor_levels_filtered) + 1,
+                                     nrow = 0) %>%
+  data.frame()
+colnames(LC_grid_df) <- c(paste0('percent.', NLCD_2011_factor_levels_filtered),
+                                          'EVENT_ID')
+
+
+# Performing the weighted extractions and filling in data.frame rows
+for (i in 1:nrow(coords_grid)) {
+  weighted_extractions <- wtd.table(weighted_extract(coords_grid[i, ]), weights = Gaussian_template)
+  curr_df <- data.frame(weighted_extractions)
+  curr_df <- tidyr::spread(curr_df, key = 'Var1', value = 'Freq', sep = "")
+  new_colnames <- c()
+  for (j in strsplit(colnames(curr_df), 'Var1')[]) {
+    new_colnames <- c(new_colnames, paste0('percent.', (j[2])))
+  }                             
+  colnames(curr_df) <- new_colnames
+  LC_grid_df <- plyr::rbind.fill(LC_grid_df, curr_df)
+  LC_grid_df[i, 'EVENT_ID'] <- IDs_grid[i]
+}
 
 
 # All NA's should be 0's because it's 'missing value'
@@ -130,9 +157,18 @@ LC_grid_df <- reshape(LC_grid_df,
 LC_grid_df[is.na(LC_grid_df)] <- 0
 
 
+# Classification value of 0 is not valid, so git rid of that as well
+LC_grid_df <- dplyr::select(LC_grid_df,
+                            -percent.0)
+LC_grid_df <- dplyr::select(LC_grid_df,
+                            -percent.12)
+
+
 # Merge the LC proportions to their lat/lon combos
 grid_with_LC <- merge(x = grid_df,
-                      y = LC_grid_df)
+                      y = LC_grid_df,
+                      by.x = 'ID',
+                      by.y = 'EVENT_ID')
 
 
 # Give the LC values a name
@@ -210,12 +246,8 @@ grid_with_LC$state <- latlong2state(grid_with_LC[2:3]) %>%
   toupper()
 
 
-# Remove NA values
-grid_with_LC <- na.omit(grid_with_LC)
-
-
-# Assign the year 2018 to all rows
-grid_with_LC$YEAR <- rep(2018, nrow(grid_with_LC))
+# Assign the year 2019 to all rows
+grid_with_LC$YEAR <- rep(2019, nrow(grid_with_LC))
 
 
 # Change the state names to abbreviations
@@ -230,14 +262,14 @@ grid_county_state_year <- dplyr::select(grid_with_LC,
 
 # Import the census-provided county area data.frame
 land_area <- read.csv("data/raw/LND01.csv") %>%
-  select(c(ï..Areaname, LND010200D))
+  select(c(Areaname, LND010200D))
 
 
 ################################################
 ########## PROCESSSING LAND AREA DATA ##########
 ################################################
 # I'm only interested in county entries, which always contain a comma
-land_area$filter_var <- grepl(",", land_area$ï..Areaname)
+land_area$filter_var <- grepl(",", land_area$Areaname)
 
 
 # Only keep things with commas (counties) and then get rid of that 
@@ -248,7 +280,7 @@ land_area <- filter(land_area,
 
 
 # Make the location variable easier to type
-colnames(land_area)[colnames(land_area) == "ï..Areaname"] <- "LOC"
+colnames(land_area)[colnames(land_area) == "Areaname"] <- "LOC"
 
 
 # Give LOC an easy-to-deal-with format
@@ -279,11 +311,11 @@ land_area$state_name <- state.name[match(land_area$state_abb,
 
 
 # Get years
-year_2018 <- rep(2018, nrow(land_area))
+year_2019 <- rep(2019, nrow(land_area))
 
 
-# Give land_area the year 2018
-land_area$YEAR <- year_2018
+# Give land_area the year 2019
+land_area$YEAR <- year_2019
 
 
 # Get the county and state
@@ -297,20 +329,87 @@ land_area_county_state_year <- select(land_area,
 
 
 # Set census API
-census_api_key("ENTER YOUR CENSUS API KEY HERE")
+census_api_key("redacted")
 
 
-# Writing a function to get ACS data of interest
-get_ACS_mob_hom_and_pop <- function(end_year) {
+# Writing a function, because this will be repeated
+get_ACS_for_tor <- function(end_year) {
   
   # description: get mobile home count and population of each county from ACS
   # argument: end-year of the ACS
-  # return: a dataframe containing mobile home count and population of each county
+  # return: a dataframe containing mobile home count, total population, and
+  #     median household income of each county
   
-  acs_df <- get_acs(geography = "county", year = end_year,
-                    variables = c("B25024_010E",   # Total mobile homes
-                                  "B01003_001E",   # Total population
-                                  "B19013_001E"))  # Median household income
+  acs_df <- get_acs(geography = "county", year = end_year, geometry = TRUE, 
+                    variables = c("B25024_010",   # Total mobile homes
+                                  "B01003_001",   # Total population
+                                  "B19013_001",   # Median household income
+                                  "B25035_001",   # Median year structures built
+                                  "B25034_001",   # Number of homes
+                                  "B02001_001",   # Number of people
+                                  "B02001_002",   # Number of white peope
+                                  "B01001_002",   # Number of males
+                                  "B09001_001",   # Number under 18 yrs old
+                                  "B15002_011",   # Males with high school equiv. edu
+                                  "B15002_028",   # Females with high school equiv. edu
+                                  "B15002_014",   # Males with associates
+                                  "B15002_031",   # Females with associates
+                                  "B15002_015",   # Males with bachelors
+                                  "B15002_032",   # Females with bachelors
+                                  "B15002_016",   # Males with masters
+                                  "B15002_017",   # Males with professional deg
+                                  "B15002_018",   # Males with doctorates
+                                  "B15002_033",   # Females with masters
+                                  "B15002_034",   # Females with professional deg
+                                  "B15002_035",   # Females with doctorates
+                                  "B01001_020",   # Males 65-66
+                                  "B01001_021",   # Males 67-69
+                                  "B01001_022",   # Males 70-74
+                                  "B01001_023",   # Males 75-79
+                                  "B01001_024",   # Males 80-84
+                                  "B01001_025",   # Males 85+
+                                  "B01001_044",   # Females 65-66
+                                  "B01001_045",   # Females 67-69
+                                  "B01001_046",   # Females 70-74
+                                  "B01001_047",   # Females 75-79
+                                  "B01001_048",   # Females 80-84
+                                  "B01001_049",   # Females 85+
+                                  "B25076_001",   # Lower quartile home values
+                                  "B25077_001",   # Median home values
+                                  "B25078_001",   # Upper quartile home values
+                                  "B17001_001",   # People w/ poverty status in the past 12 months
+                                  "B19083_001",   # Gini index of income inequality
+                                  "B12006_006",   # Unemployed males in labor force (nev. married)
+                                  "B12006_007",   # Males not in the labor force (nev. married)
+                                  "B12006_011",   # Unemployed females in labor force (nev. marr.),
+                                  "B12006_012",   # Females not in the labor force (nev. married)
+                                  "B12006_017",   # Unemployed males in labor force (married)
+                                  "B12006_018",   # Males not in the labor force (married)
+                                  "B12006_022",   # Unemployed females in labor force (married)
+                                  "B12006_023",   # Females not in the labor force (married)
+                                  "B12006_028",   # Unemployed males in labor force (separated)
+                                  "B12006_029",   # Males not in the labor force (separated)
+                                  "B12006_033",   # Unemployed females in labor force ( separated)
+                                  "B12006_034",   # Females not in the labor force (separated)
+                                  "B12006_039",   # Unemployed males in labor force (widowed)
+                                  "B12006_040",   # Males not in the labor force (widowed)
+                                  "B12006_044",   # Unemployed females in labor force (widowed)
+                                  "B12006_045",   # Females not in the labor force (widowed)
+                                  "B12006_050",   # Unemployed males in labor force (divorced)
+                                  "B12006_051",   # Males not in labor force (divorced)
+                                  "B12006_055",   # Unemployed females in labor force (divorced)
+                                  "B12006_056",   # Females not in labor force (divorced)
+                                  "B08303_008",   # 30-34min travel time to work
+                                  "B08303_009",   # 35-39min travel time to work
+                                  "B08303_010",   # 40-44min travel time to work
+                                  "B08303_011",   # 45-59min travel time to work
+                                  "B08303_012",   # 60-89min travel time to work
+                                  "B08303_013",   # 90min+ travel time to work
+                                  "B08011_002",   # depart for work between midnight & 5am
+                                  "B08011_003",   # depart for work between 5 and 5:30 am
+                                  "B08011_004",   # depart for work between 5:30 and 6 am
+                                  "B08011_015"   # depart for work between 4pm and midnight
+                    ))  
   
   acs_df$YEAR <- rep(end_year, nrow(acs_df))
   
@@ -320,14 +419,277 @@ get_ACS_mob_hom_and_pop <- function(end_year) {
 
 
 # Get ACS data
-acs_2015 <- get_ACS_mob_hom_and_pop(2015)
-acs_df <- acs_2015
+acs_2017 <- get_ACS_for_tor(2017)
+acs_2017_wide <- dplyr::select(data.frame(acs_2017),
+                               c('NAME', 'variable', 'estimate'))
+acs_2017_wide <- reshape(data = acs_2017_wide, idvar = 'NAME',
+                         timevar = 'variable', direction = 'wide')
+acs_df <- acs_2017
 
-acs_df$YEAR <- rep(2018, nrow(acs_df))
-rm(acs_2015)
+acs_df$YEAR <- rep(2019, nrow(acs_df))
+rm(acs_2017)
 
-acs_df <- dplyr::select(acs_df,
-                        -c(GEOID, moe))
+#acs_df <- dplyr::select(acs_df,
+#                        -c(GEOID, moe))
+
+# Defining function for the weighted extraction
+weighted_extract <- function(coords, year, ACS_data) {
+  ACS_data <- dplyr::filter(ACS_data,
+                            variable == 'B01001_002') # Random one to remove duplicate .shp's
+  
+  # Creating grid of lats and lon
+  coords_1 <- seq(as.numeric(coords[1]) - (dim(Gaussian_template)[1] - 1) / 2 * 30,
+                  as.numeric(coords[1]) + (dim(Gaussian_template)[1] - 1) / 2 * 30,
+                  by = 30)
+  coords_2 <- seq(as.numeric(coords[2]) - (dim(Gaussian_template)[2] - 1) / 2 * 30,
+                  as.numeric(coords[2]) + (dim(Gaussian_template)[2] - 1) / 2 * 30,
+                  by = 30)
+  
+  # Making them into data.frame columns
+  lon <- as.vector(t(replicate(dim(Gaussian_template)[2], coords_1)))
+  lat <- as.vector(replicate(dim(Gaussian_template)[1], coords_2))
+  coords_df <- data.frame(lon, lat)
+  
+  # Formalizing the spatial object
+  Gaussian_template_for_tor <- SpatialPointsDataFrame(coords_df,
+                                                      coords_df,
+                                                      proj4string = crs(NLCD_2011))
+  # Converting to the census CRS
+  Gaussian_template_for_tor <- spTransform(Gaussian_template_for_tor,
+                                           crs(ACS_data))
+  
+  # Extract the all social value indices within the Gaussian template extent
+  Gaussian_template_area_extraction <- over(Gaussian_template_for_tor,
+                                            as_Spatial(ACS_data$geometry))
+  
+  # Get the data from those indices
+  Gaussian_template_data <- ACS_data[Gaussian_template_area_extraction, ]
+  
+  # From that data, match the long data (georef.) to the wide data (not-georef., compacted vars)
+  all_vars_indices <- match(paste(Gaussian_template_data$NAME, 2019),
+                            paste(acs_2017_wide$NAME, 2019))
+  return(all_vars_indices)
+}
+
+
+# Performing the weighted extraction for all ACS variables
+new_features <- matrix(ncol = 21, nrow = nrow(tor_df))
+for (i in 1:nrow(grid_points@data)) {
+  print(i)
+  print(Sys.time())
+  a <- weighted_extract(coords_grid[i, ], 2019, acs_df)
+  
+  # Number of mobile homes
+  mobile_homes_list <- acs_2017_wide$estimate.B25024_010[a]
+  mobile_homes_weighted <- stats::weighted.mean(mobile_homes_list,
+                                                as.vector(Gaussian_template),
+                                                na.rm = TRUE) # For the coastal cases and
+  # partially missing data
+  
+  # Total population count
+  population_list <- acs_2017_wide$estimate.B01003_001[a]
+  population_weighted <- stats::weighted.mean(population_list,
+                                              as.vector(Gaussian_template),
+                                              na.rm = TRUE)
+  new_features[i, 2] <- population_weighted
+  
+  # Median household income
+  med_income_list <- acs_2017_wide$estimate.B19013_001[a]
+  med_income_weighted <- stats::weighted.mean(med_income_list,
+                                              as.vector(Gaussian_template),
+                                              na.rm = TRUE)
+  new_features[i, 3] <- med_income_weighted
+  
+  # Median year home built
+  med_home_age_list <- acs_2017_wide$estimate.B25035_001[a]
+  med_home_age_weighted <- stats::weighted.mean(med_home_age_list,
+                                                as.vector(Gaussian_template),
+                                                na.rm = TRUE)
+  new_features[i, 4] <- med_home_age_weighted
+  
+  # Number homes
+  num_homes_list <- acs_2017_wide$estimate.B25034_001[a]
+  num_homes_weighted <- stats::weighted.mean(num_homes_list,
+                                             as.vector(Gaussian_template),
+                                             na.rm = TRUE)
+  new_features[i, 5] <- num_homes_weighted
+  percent_mobile_homes_weighted <- mobile_homes_weighted / num_homes_weighted
+  new_features[i, 1] <- percent_mobile_homes_weighted
+  
+  # Number white
+  num_white_list <- acs_2017_wide$estimate.B02001_002[a]
+  num_white_weighted <- stats::weighted.mean(num_white_list,
+                                             as.vector(Gaussian_template),
+                                             na.rm = TRUE)
+  percent_white_weighted <- num_white_weighted / population_weighted
+  new_features[i, 6] <- percent_white_weighted
+  
+  # Number males
+  num_males_list <- acs_2017_wide$estimate.B01001_002[a]
+  num_males_weighted <- stats::weighted.mean(num_males_list,
+                                             as.vector(Gaussian_template),
+                                             na.rm = TRUE)
+  percent_males_weighted <- num_males_weighted / population_weighted
+  new_features[i, 7] <- percent_males_weighted
+  
+  # Number children
+  num_children_list <- acs_2017_wide$estimate.B09001_001[a]
+  num_children_weighted <- stats::weighted.mean(num_children_list,
+                                                as.vector(Gaussian_template),
+                                                na.rm = TRUE)
+  percent_kids_weighted <- num_children_weighted / population_weighted
+  new_features[i, 8] <- percent_kids_weighted
+  num_adults <- population_weighted - num_children_weighted
+  
+  # Number with high school level edu
+  num_high_school_list <- (acs_2017_wide$estimate.B15002_011[a] +
+                             acs_2017_wide$estimate.B15002_028[a])
+  num_high_school_weighted <- stats::weighted.mean(num_high_school_list,
+                                                   as.vector(Gaussian_template),
+                                                   na.rm = TRUE)
+  percent_high_school_weighted <- num_high_school_weighted / num_adults
+  new_features[i, 9] <- percent_high_school_weighted
+  
+  # Number with associates level edu
+  num_assoc_list <- (acs_2017_wide$estimate.B15002_014[a] +
+                       acs_2017_wide$estimate.B15002_031[a])
+  num_assoc_weighted <- stats::weighted.mean(num_assoc_list,
+                                             as.vector(Gaussian_template),
+                                             na.rm = TRUE)
+  percent_assoc_weighted <- num_assoc_weighted / num_adults
+  new_features[i, 10] <- percent_assoc_weighted
+  
+  # Number with bachelors level edu
+  num_bach_list <- (acs_2017_wide$estimate.B15002_015[a] +
+                      acs_2017_wide$estimate.B15002_032[a])
+  num_bach_weighted <- stats::weighted.mean(num_bach_list,
+                                            as.vector(Gaussian_template),
+                                            na.rm = TRUE)
+  percent_bach_weighted <- num_bach_weighted / num_adults
+  new_features[i, 11] <- percent_bach_weighted
+  
+  # Number with graduate level edu
+  num_grad_list <- (acs_2017_wide$estimate.B15002_016[a] +
+                      acs_2017_wide$estimate.B15002_017[a] +
+                      acs_2017_wide$estimate.B15002_018[a] +
+                      acs_2017_wide$estimate.B15002_033[a] +
+                      acs_2017_wide$estimate.B15002_034[a] +
+                      acs_2017_wide$estimate.B15002_035[a])
+  num_grad_weighted <- stats::weighted.mean(num_grad_list,
+                                            as.vector(Gaussian_template),
+                                            na.rm = TRUE)
+  percent_grad_weighted <- num_grad_weighted / num_adults
+  new_features[i, 12] <- percent_grad_weighted
+  
+  # Number senior citizens
+  num_senr_list <- (acs_2017_wide$estimate.B01001_020[a] +
+                      acs_2017_wide$estimate.B01001_021[a] +
+                      acs_2017_wide$estimate.B01001_022[a] +
+                      acs_2017_wide$estimate.B01001_023[a] +
+                      acs_2017_wide$estimate.B01001_024[a] +
+                      acs_2017_wide$estimate.B01001_025[a] +
+                      acs_2017_wide$estimate.B01001_044[a] +
+                      acs_2017_wide$estimate.B01001_045[a] +
+                      acs_2017_wide$estimate.B01001_046[a] +
+                      acs_2017_wide$estimate.B01001_047[a] +
+                      acs_2017_wide$estimate.B01001_048[a] +
+                      acs_2017_wide$estimate.B01001_049[a])
+  num_senr_weighted <- stats::weighted.mean(num_senr_list,
+                                            as.vector(Gaussian_template),
+                                            na.rm = TRUE)
+  percent_senr_weighted <- num_senr_weighted / population_weighted
+  new_features[i, 13] <- percent_senr_weighted
+  
+  # Lower quartile home value
+  lowerq_home_list <- acs_2017_wide$estimate.B25076_001[a]
+  lowerq_home_weighted <- stats::weighted.mean(lowerq_home_list,
+                                               as.vector(Gaussian_template),
+                                               na.rm = TRUE)
+  new_features[i, 14] <- lowerq_home_weighted
+  
+  # Median home value
+  median_home_list <- acs_2017_wide$estimate.B25077_001[a]
+  median_home_weighted <- stats::weighted.mean(median_home_list,
+                                               as.vector(Gaussian_template),
+                                               na.rm = TRUE)
+  new_features[i, 15] <- median_home_weighted
+  
+  # Upper quartile home value
+  upperq_home_list <- acs_2017_wide$estimate.B25078_001[a]
+  upperq_home_weighted <- stats::weighted.mean(upperq_home_list,
+                                               as.vector(Gaussian_template),
+                                               na.rm = TRUE)
+  new_features[i, 16] <- upperq_home_weighted
+  
+  # Num in poverty in last 12 months
+  num_poverty_list <- acs_2017_wide$estimate.B17001_001[a]
+  num_poverty_weighted <- stats::weighted.mean(num_poverty_list,
+                                               as.vector(Gaussian_template),
+                                               na.rm = TRUE)
+  percent_poverty_weighted <- num_poverty_weighted / population_weighted
+  new_features[i, 17] <- percent_poverty_weighted
+  
+  # Gini
+  gini_index_list <- acs_2017_wide$estimate.B19083_001[a]
+  gini_index_weighted <- stats::weighted.mean(gini_index_list,
+                                              as.vector(Gaussian_template),
+                                              na.rm = TRUE)
+  new_features[i, 18] <- gini_index_weighted
+  
+  # Number not working
+  not_working_list <- (acs_2017_wide$estimate.B12006_006[a] +
+                         acs_2017_wide$estimate.B12006_007[a] +
+                         acs_2017_wide$estimate.B12006_011[a] +
+                         acs_2017_wide$estimate.B12006_012[a] +
+                         acs_2017_wide$estimate.B12006_017[a] +
+                         acs_2017_wide$estimate.B12006_018[a] +
+                         acs_2017_wide$estimate.B12006_022[a] +
+                         acs_2017_wide$estimate.B12006_023[a] +
+                         acs_2017_wide$estimate.B12006_028[a] +
+                         acs_2017_wide$estimate.B12006_029[a] +
+                         acs_2017_wide$estimate.B12006_033[a] +
+                         acs_2017_wide$estimate.B12006_034[a] +
+                         acs_2017_wide$estimate.B12006_039[a] +
+                         acs_2017_wide$estimate.B12006_040[a] +
+                         acs_2017_wide$estimate.B12006_044[a] +
+                         acs_2017_wide$estimate.B12006_045[a] +
+                         acs_2017_wide$estimate.B12006_050[a] +
+                         acs_2017_wide$estimate.B12006_051[a] +
+                         acs_2017_wide$estimate.B12006_055[a] +
+                         acs_2017_wide$estimate.B12006_056[a])
+  not_working_weighted <- stats::weighted.mean(not_working_list,
+                                               as.vector(Gaussian_template),
+                                               na.rm = TRUE)
+  percent_not_working_weighted <- not_working_weighted / num_adults
+  new_features[i, 19] <- percent_not_working_weighted
+  
+  # Number with commute 30mins or greater
+  commuter_30_list <- (acs_2017_wide$estimate.B08303_008[a] +
+                         acs_2017_wide$estimate.B08303_009[a] +
+                         acs_2017_wide$estimate.B08303_010[a] +
+                         acs_2017_wide$estimate.B08303_011[a] +
+                         acs_2017_wide$estimate.B08303_012[a] +
+                         acs_2017_wide$estimate.B08303_013[a])
+  commuter_30_weighted <- stats::weighted.mean(commuter_30_list,
+                                               as.vector(Gaussian_template),
+                                               na.rm = TRUE)
+  percent_commuter_30_weighted <- commuter_30_weighted / num_adults
+  new_features[i, 20] <- percent_commuter_30_weighted
+  
+  # Number with odd-hour commute
+  odd_commuter_list <- acs_2017_wide$estimate.B08011_002[a]
+  odd_commuter_weighted <- stats::weighted.mean(odd_commuter_list,
+                                                as.vector(Gaussian_template),
+                                                na.rm = TRUE)
+  percent_odd_commuter_weighted <- odd_commuter_weighted / num_adults
+  new_features[i, 21] <- percent_odd_commuter_weighted
+}
+
+
+
+
+
+
 
 
 # Get only population counts
