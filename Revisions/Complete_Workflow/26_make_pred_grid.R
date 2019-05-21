@@ -20,12 +20,12 @@ library(sf)
 # Get all possible longitude values
 LON <- seq(from = -125,
            to = -66,
-           by = 10)  ################################ Change this
+           by = 0.75)  
 
 
 # Iteratively add each possible latitude value in an
 # Adjacent column to the longitude values
-for (i in seq(from = 23, to = 50, by = 10)) {        ############################ Change this
+for (i in seq(from = 23, to = 50, by = 0.75)) {        
   
   if (i == 23) {
     
@@ -329,7 +329,7 @@ land_area_county_state_year <- select(land_area,
 
 
 # Set census API
-census_api_key("redacted")
+census_api_key("REDACTED")
 
 
 # Writing a function, because this will be repeated
@@ -429,8 +429,8 @@ acs_df <- acs_2017
 acs_df$YEAR <- rep(2019, nrow(acs_df))
 rm(acs_2017)
 
-#acs_df <- dplyr::select(acs_df,
-#                        -c(GEOID, moe))
+acs_df <- dplyr::select(acs_df,
+                        -c(GEOID, moe))
 
 # Defining function for the weighted extraction
 weighted_extract <- function(coords, year, ACS_data) {
@@ -473,7 +473,7 @@ weighted_extract <- function(coords, year, ACS_data) {
 
 
 # Performing the weighted extraction for all ACS variables
-new_features <- matrix(ncol = 21, nrow = nrow(tor_df))
+new_features <- matrix(ncol = 21, nrow = nrow(grid_points@data))
 for (i in 1:nrow(grid_points@data)) {
   print(i)
   print(Sys.time())
@@ -686,93 +686,25 @@ for (i in 1:nrow(grid_points@data)) {
 }
 
 
+# Hard-coding the column names - triple check'd but fragile to change
+new_features_colnames <- c('PERC_MOB_HOMES', 'POP_DENS', 'MEDIAN_HOUSE_INC',
+                           'MED_HOME_AGE', 'NUM_HOMES', 'PERC_WHITE',
+                           'PERC_MALE', 'PERC_KIDS', 'PERC_HIGH_SCHOOL',
+                           'PERC_ASSOC', 'PERC_BACH', 'PERC_GRAD',
+                           'PERC_SENIOR', 'LOWERQ_HOME_VAL', 'MED_HOME_VAL',
+                           'UPPERQ_HOME_VAL', 'PERC_POVERTY', 'GINI_INDEX',
+                           'PERC_NOT_WORKING', 'PERC_COMM_30', 'PERC_COMM_EARLY')
+# Changing the matrix to a data.frame and renaming the columns appropriately
+ACS_vars <- data.frame(new_features)
+colnames(ACS_vars) <- new_features_colnames
 
 
+# Merging tor data and ACS data
+grid_with_LC <- cbind(grid_with_LC, ACS_vars)
 
 
-
-
-# Get only population counts
-population_data <- filter(acs_df,
-                          variable == "B01003_001")
-
-
-# Get only mobile home counts
-mob_home_data <- filter(acs_df,
-                        variable == "B25024_010")
-
-
-# Get only median household income
-income_data <- filter(acs_df,
-                      variable == "B19013_001")
-
-
-# Match mobile home count to the land area data.frame
-land_area$MOB_HOM_COUNT <- mob_home_data$estimate[match(toupper(do.call(paste, land_area_county_state_year)),
-                                                        paste(toupper(sub("\\s+\\w+,", "",
-                                                                          mob_home_data$NAME)),
-                                                              mob_home_data$YEAR))]
-
-
-# Match population count to the land area data.frame
-land_area$POP_COUNT <- population_data$estimate[match(toupper(do.call(paste, land_area_county_state_year)),
-                                                      paste(toupper(sub("\\s+\\w+,", "",
-                                                                        population_data$NAME)),
-                                                            population_data$YEAR))]
-
-
-# Match population count to the land area data.frame
-land_area$INCOME <- income_data$estimate[match(toupper(do.call(paste, land_area_county_state_year)),
-                                               paste(toupper(sub("\\s+\\w+,", "",
-                                                                 income_data$NAME)),
-                                                     income_data$YEAR))]
-
-
-# Make land area numeric
-land_area$LND010200D <- as.numeric(land_area$LND010200D)
-
-
-# Get mobile home density
-land_area$MOB_HOM_DENS <- land_area$MOB_HOM_COUNT / land_area$LND010200D
-
-
-# Get population density
-land_area$POP_DENS <- land_area$POP_COUNT / land_area$LND010200D
-
-
-# Get the county, state, and year for matching
-grid_county_state_year <- dplyr::select(grid_with_LC,
-                                       c(county_name,
-                                         state_abbrev,
-                                         YEAR))
-
-# Format land_area$LOC
-land_area$LOC <- gsub("\\s+", " ", land_area$LOC) %>%
-  substring(first = 2)
-
-
-# Match ACS data to grid points
-grid_with_LC$MOB_HOME_DENS <- land_area$MOB_HOM_DENS[match(toupper(do.call(paste, grid_county_state_year)),
-                                                     paste(toupper(sub(",", "",
-                                                                       land_area$LOC)),
-                                                           land_area$YEAR))]
-
-grid_with_LC$POP_DENS <- land_area$POP_DENS[match(toupper(do.call(paste, grid_county_state_year)),
-                                            paste(toupper(sub(",", "",
-                                                              land_area$LOC)),
-                                                  land_area$YEAR))]
-
-grid_with_LC$INCOME <- land_area$INCOME[match(toupper(do.call(paste, grid_county_state_year)),
-                                              paste(toupper(sub(",", "",
-                                                                land_area$LOC)),
-                                                    land_area$YEAR))]
-
-
-# Some counties don't appear in all data sources, therefore making some Inf values
-# Getting rid of the NAs and Infs
-grid_with_LC <- dplyr::filter(grid_with_LC,
-                              POP_DENS != Inf) %>%
-  na.omit()
+# Omit rows with missing values
+grid_with_LC <- na.omit(grid_with_LC)
 
 
 # Import the unprocessed model data
@@ -795,51 +727,6 @@ grid_with_LC$time <- rep(mean(unprocessed_tor_df$BEGIN_TIME),
 
 grid_with_LC$mult_vort_ind <- rep(mean(unprocessed_tor_df$MULTI_VORT_IND),
                                   nrow(grid_with_LC))
-
-
-# Assigning state rank the same way it was done the first time
-# Before these were different data sets, no longer the case
-# Refuse to rename throughout
-tor_df <- unprocessed_tor_df
-DamPerState <- aggregate(tor_df$DAMAGE_PROPERTY,
-                         by = list(Category = tor_df$STATE),
-                         FUN = sum)
-
-# Order them
-cum_dam_order <- sort(DamPerState$x, decreasing = TRUE)
-
-# Make the ordered damage a dataframe
-cum_dam_rank <- as.data.frame(cum_dam_order)
-
-# Create a rank dataframe
-rank <- as.data.frame(c(1:nrow(cum_dam_rank)))
-
-# Assign rank
-cum_dam_rank <- cbind(rank, cum_dam_rank)
-
-# Make them have same column name
-DamPerState$cum_dam_order <- DamPerState$x
-
-# Get rank matched with state name
-dam_per_state_rank <- merge(x = DamPerState,
-                            y = cum_dam_rank,
-                            by = "cum_dam_order")
-
-# Name state and rank correctly
-dam_per_state_rank$STATE <- dam_per_state_rank$Category
-
-dam_per_state_rank$STATE_RANK <- dam_per_state_rank$`c(1:nrow(cum_dam_rank))`
-
-# Get only state name and rank
-dam_per_state_rank <- dplyr::select(dam_per_state_rank,
-                                    c(STATE, STATE_RANK))
-
-colnames(grid_with_LC)[colnames(grid_with_LC) == 'state'] <- 'STATE'
-
-# Merge this back to the original dataframe
-grid_with_LC <- merge(x = grid_with_LC,
-                      y = dam_per_state_rank,
-                      by = "STATE")
 
 
 # Produce tornado area
@@ -865,7 +752,7 @@ grid_with_LC$WOOD_DEV_INT <- grid_with_LC$TOT_DEV_INT * grid_with_LC$TOT_WOOD_AR
 
 
 # Produce an approximation of wealth contained in the the tornado area
-grid_with_LC$EXP_INC_AREA <- grid_with_LC$INCOME * grid_with_LC$assumed_area
+grid_with_LC$EXP_INC_AREA <- grid_with_LC$MEDIAN_HOUSE_INC * grid_with_LC$assumed_area
 
 
 # For the predictions, we will do the 15th of each month
@@ -1039,7 +926,7 @@ grid_with_LC$HERB_WETLAND_PROP <- mean_norm_log_xform_prop('HERB_WETLAND_PROP')
 
 grid_with_LC$BARREN_LAND_PROP <- mean_norm_log_xform_prop('BARREN_LAND_PROP')
 
-grid_with_LC$INCOME <- mean_norm_log_xform('INCOME')
+grid_with_LC$MEDIAN_HOUSE_INC <- mean_norm_log_xform('MEDIAN_HOUSE_INC')
 
 grid_with_LC$TOR_AREA <- mean_norm_log_xform_prop('TOR_AREA')
 
@@ -1051,13 +938,51 @@ grid_with_LC$WOOD_DEV_INT <- mean_norm_log_xform_prop('WOOD_DEV_INT')
 
 grid_with_LC$EXP_INC_AREA <- mean_norm_log_xform('EXP_INC_AREA')
 
-grid_with_LC$STATE_RANK <- mean_norm_log_xform_prop('STATE_RANK')
-
 grid_with_LC$YEAR <- mean_normalize('YEAR')
 
-grid_with_LC$MOB_HOME_DENS <- mean_norm_log_xform_prop('MOB_HOME_DENS')
+grid_with_LC$PERC_MOB_HOMES <- mean_norm_log_xform_prop('PERC_MOB_HOMES')
 
 grid_with_LC$POP_DENS <- mean_norm_log_xform('POP_DENS')
+
+grid_with_LC$MED_HOME_AGE <- mean_norm_log_xform('MED_HOME_AGE')
+
+grid_with_LC$NUM_HOMES <- mean_norm_log_xform('NUM_HOMES')
+
+grid_with_LC$PERC_WHITE <- mean_normalize('PERC_WHITE')
+
+grid_with_LC$PERC_MALE <- mean_normalize('PERC_MALE')
+
+grid_with_LC$PERC_KIDS <- mean_normalize('PERC_KIDS')
+
+grid_with_LC$PERC_HIGH_SCHOOL <- mean_normalize('PERC_HIGH_SCHOOL')
+
+grid_with_LC$PERC_ASSOC <- mean_normalize('PERC_ASSOC')
+
+grid_with_LC$PERC_BACH <- mean_normalize('PERC_BACH')
+
+grid_with_LC$PERC_GRAD <- mean_normalize('PERC_GRAD')
+
+grid_with_LC$PERC_SENIOR <- mean_normalize('PERC_SENIOR')
+
+grid_with_LC$PERC_SENIOR <- mean_normalize('PERC_SENIOR')
+
+grid_with_LC$MED_HOME_VAL<- mean_norm_log_xform('MED_HOME_VAL')
+
+grid_with_LC$LOWERQ_HOME_VAL <- mean_norm_log_xform('LOWERQ_HOME_VAL')
+
+grid_with_LC$UPPERQ_HOME_VAL <- mean_norm_log_xform('UPPERQ_HOME_VAL')
+
+grid_with_LC$PERC_POVERTY <- mean_norm_log_xform('PERC_POVERTY')
+
+grid_with_LC$PERC_NOT_WORKING <- mean_norm_log_xform('PERC_NOT_WORKING')
+
+grid_with_LC$GINI_INDEX <- mean_norm_log_xform('GINI_INDEX')
+
+grid_with_LC$PERC_COMM_30 <- mean_normalize('PERC_COMM_30')
+
+grid_with_LC$PERC_COMM_EARLY <- mean_normalize('PERC_COMM_EARLY')
+
+
 
 
 # Reshape the gridded data.frame so that we can see all
@@ -1065,7 +990,7 @@ grid_with_LC$POP_DENS <- mean_norm_log_xform('POP_DENS')
 grid_hist_data <- melt(grid_with_LC)
 
 grid_hist_data <- dplyr::select(grid_hist_data,
-                                -c(STATE,
+                                -c(state,
                                    county_name,
                                    state_abbrev))
 
