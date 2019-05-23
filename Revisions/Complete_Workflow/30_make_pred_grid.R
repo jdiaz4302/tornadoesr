@@ -964,8 +964,6 @@ grid_with_LC$PERC_GRAD <- mean_normalize('PERC_GRAD')
 
 grid_with_LC$PERC_SENIOR <- mean_normalize('PERC_SENIOR')
 
-grid_with_LC$PERC_SENIOR <- mean_normalize('PERC_SENIOR')
-
 grid_with_LC$MED_HOME_VAL<- mean_norm_log_xform('MED_HOME_VAL')
 
 grid_with_LC$LOWERQ_HOME_VAL <- mean_norm_log_xform('LOWERQ_HOME_VAL')
@@ -1025,5 +1023,6 @@ final_grid_df <- dplyr::select(grid_with_LC,
 # Save the gridded data.frame so we can predict off it in PyTorch
 write_csv(final_grid_df,
           'data/raw/final_grid_df.csv')
+
 
 
