@@ -76,7 +76,7 @@ stand_dev_of_tor_length <- sd(tor_df$TOR_LENGTH) * 1609.34
 # Keeping the EVENT_IDs too
 coords_cities <- cities_NLCD_crs@coords
 coords_cities <- coords_cities[1:(length(coords_cities) / 2), ]
-IDs_cities <- cities_NLCD_crs@data$`cities_df$ID`
+IDs_cities <- cities_NLCD_crs@data$`cities_df$name`
 
 
 # Creating a Gaussian template with NLCD CRS and tornado path length sd
@@ -152,7 +152,7 @@ LC_cities_df <- dplyr::select(LC_cities_df,
 # Merge the LC proportions to their lat/lon combos
 cities_with_LC <- merge(x = cities_df,
                       y = LC_cities_df,
-                      by.x = 'ID',
+                      by.x = 'name',
                       by.y = 'EVENT_ID')
 
 
@@ -790,8 +790,8 @@ cities_with_LC <- base::merge(x = cities_with_LC,
 
 
 # Keep names the same as the original model data
-colnames(cities_with_LC)[colnames(cities_with_LC) == 'LON'] <- 'BEGIN_LON'
-colnames(cities_with_LC)[colnames(cities_with_LC) == 'LAT'] <- 'BEGIN_LAT'
+colnames(cities_with_LC)[colnames(cities_with_LC) == 'lon'] <- 'BEGIN_LON'
+colnames(cities_with_LC)[colnames(cities_with_LC) == 'lat'] <- 'BEGIN_LAT'
 colnames(cities_with_LC)[colnames(cities_with_LC) == 'assumed_duration'] <- 'DURATION_SECONDS'
 colnames(cities_with_LC)[colnames(cities_with_LC) == 'assumed_tor_length'] <- 'TOR_LENGTH'
 colnames(cities_with_LC)[colnames(cities_with_LC) == 'assumed_tor_width'] <- 'TOR_WIDTH'
@@ -949,8 +949,6 @@ cities_with_LC$PERC_GRAD <- mean_normalize('PERC_GRAD')
 
 cities_with_LC$PERC_SENIOR <- mean_normalize('PERC_SENIOR')
 
-cities_with_LC$PERC_SENIOR <- mean_normalize('PERC_SENIOR')
-
 cities_with_LC$MED_HOME_VAL<- mean_norm_log_xform('MED_HOME_VAL')
 
 cities_with_LC$LOWERQ_HOME_VAL <- mean_norm_log_xform('LOWERQ_HOME_VAL')
@@ -1010,5 +1008,6 @@ final_cities_df <- dplyr::select(cities_with_LC,
 # Save the citiesded data.frame so we can predict off it in PyTorch
 write_csv(final_cities_df,
           'data/raw/final_cities_df.csv')
+
 
 
