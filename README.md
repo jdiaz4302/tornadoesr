@@ -5,6 +5,11 @@
 **Preprint**: [arXiv - stat.ML](https://arxiv.org/abs/1807.03456)<br>
 **Research data**: [figshare](https://figshare.com/articles/Zipped_data/6792206) (this workflow pulls all the data, however Storm Events updates periodically) 
 
+## Sample Figures
+
+![probability of tornado causing damage animation](https://github.com/jdiaz4302/tornadoesr/blob/master/binary_map.gif)
+![property damage caused by tornado predictions](https://github.com/jdiaz4302/tornadoesr/blob/master/conditional_map.gif)
+
 ## Summary of the Project
 
 This project aims to predict dollar-amount, tornado-induced property damage using the following types of variables:
