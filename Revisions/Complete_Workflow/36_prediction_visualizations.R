@@ -1,10 +1,6 @@
 
 
 
-# Produced via:
-# jupyter nbconvert --to script Revisions/Complete_Workflow/36_prediction_visualizations.ipynb
-# Then minimally altered
-
 library(ggplot2)
 
 grid_df <- read.csv('data/raw/grid_with_predictions.csv')
@@ -42,9 +38,32 @@ pred_df <- rbind(sub_grid_df, sub_cities_df)
 
 states <- map_data("state")
 
-png('1.png', height = 2, width = 2, units = 'in', res = 300)
+library(akima)
+library(reshape2)
+
+fld <- with(pred_df, interp(x = BEGIN_LON, y = BEGIN_LAT, z = DAMAGE_PROPERTY, duplicate = TRUE))
+
+df <- melt(fld$z, na.rm = TRUE)
+names(df) <- c("x", "y", "dam")
+df$Lon <- fld$x[df$x]
+df$Lat <- fld$y[df$y]
+png('1.png', height = 4, width = 4, units = 'in', res = 300)
 ggplot(data = states) + 
-  geom_polygon(aes(x = long, y = lat, group = group), color = "black", fill = 'NA', lwd = 0.05) +
+  coord_quickmap() +
+  geom_tile(data = df, aes(x = Lon, y = Lat, fill = dam), alpha = 0.2) +
+  geom_polygon(aes(x = long, y = lat, group = group), color = "grey50", fill = 'NA', lwd = 0.5) +
+  viridis::scale_fill_viridis('Conditional property\ndamage', limit = c(0, 250000), na.value = 'black', direction = -1, option = 'B',
+                              breaks = c(200000,
+                                         400000,
+                                         600000,
+                                         800000,
+                                         1000000,
+                                         1200000,
+                                         1400000,
+                                         1600000,
+                                         1800000),
+                              labels = c('$200,000', '$400,000', '$600,000', '$800,000', '$1,000,000',
+                                         '$1,200,000', '$1,400,000', '$1,600,000', '$1,800,000')) +
   viridis::scale_color_viridis('Conditional property\ndamage', limit = c(0, 250000), na.value = 'black',
                                direction = -1, option = 'B',
                                breaks = c(200000,
@@ -70,52 +89,26 @@ ggplot(data = states) +
                                        color = DAMAGE_PROPERTY),
              size = 0.6, pch = 22) +
   theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
+  theme(panel.grid = element_blank(), plot.title = element_text(size = 14),
+        axis.title = element_blank(), legend.title = element_text(size = 14),
+        axis.text = element_blank(), legend.text = element_text(size = 12),
         axis.ticks = element_blank(), legend.position = 'none') +
   labs(title = paste0(worst_month, '-15-2019'))
 dev.off()
 
-library(akima)
-library(reshape2)
-
-fld <- with(pred_df, interp(x = BEGIN_LON, y = BEGIN_LAT, z = DAMAGE_PROPERTY, duplicate = TRUE))
+fld <- with(pred_df, interp(x = BEGIN_LON, y = BEGIN_LAT, z = DAMAGE_PROB, duplicate = TRUE))
 
 df <- melt(fld$z, na.rm = TRUE)
 names(df) <- c("x", "y", "dam")
 df$Lon <- fld$x[df$x]
 df$Lat <- fld$y[df$y]
-png('2.png', height = 2, width = 2, units = 'in', res = 300)
-
+png('3.png', height = 4, width = 4, units = 'in', res = 300)
 ggplot(data = states) + 
   coord_quickmap() +
-  geom_tile(data = df, aes(x = Lon, y = Lat, fill = dam)) +
-  geom_polygon(aes(x = long, y = lat, group = group), color = "cyan", fill = 'NA', lwd = 0.5) +
-  viridis::scale_fill_viridis('Conditional property\ndamage', limit = c(0, 250000), na.value = 'black', direction = -1, option = 'B',
-                              breaks = c(200000,
-                                         400000,
-                                         600000,
-                                         800000,
-                                         1000000,
-                                         1200000,
-                                         1400000,
-                                         1600000,
-                                         1800000),
-                              labels = c('$200,000', '$400,000', '$600,000', '$800,000', '$1,000,000',
-                                         '$1,200,000', '$1,400,000', '$1,600,000', '$1,800,000')) +
-  theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
-        axis.ticks = element_blank(), legend.position = 'none') +
-  labs(title = paste0(worst_month, '-15-2019'))
-dev.off()
-
-png('3.png', height = 2, width = 2, units = 'in', res = 300)
-
-ggplot(data = states) + 
-  geom_polygon(aes(x = long, y = lat, group = group), color = "black", fill = 'NA', lwd = 0.05) +
+  geom_tile(data = df, aes(x = Lon, y = Lat, fill = dam), alpha = 0.2) +
+  geom_polygon(aes(x = long, y = lat, group = group), color = "grey50", fill = 'NA', lwd = 0.5) +
+  viridis::scale_fill_viridis('Probability\nof damage', direction = -1, option = 'B',
+                              limit = c(-0.01, 1.01)) +
   viridis::scale_color_viridis('Probability\nof damage', direction = -1, option = 'B',
                                limit = c(-0.01, 1.01)) + 
   coord_quickmap() +
@@ -129,31 +122,9 @@ ggplot(data = states) +
                                        color = DAMAGE_PROB),
              size = 0.6, pch = 22) +
   theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
-        axis.ticks = element_blank(), legend.position = 'none') +
-  labs(title = paste0(worst_month, '-15-2019'))
-dev.off()
-
-fld <- with(pred_df, interp(x = BEGIN_LON, y = BEGIN_LAT, z = DAMAGE_PROB, duplicate = TRUE))
-
-df <- melt(fld$z, na.rm = TRUE)
-names(df) <- c("x", "y", "dam")
-df$Lon <- fld$x[df$x]
-df$Lat <- fld$y[df$y]
-png('4.png', height = 2, width = 2, units = 'in', res = 300)
-
-ggplot(data = states) + 
-  coord_quickmap() +
-  geom_tile(data = df, aes(x = Lon, y = Lat, fill = dam)) +
-  geom_polygon(aes(x = long, y = lat, group = group), color = "white", fill = 'NA', lwd = 0.5) +
-  viridis::scale_fill_viridis('Probability\nof damage', direction = -1, option = 'B',
-                              limit = c(-0.01, 1.01)) +
-  theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
+  theme(panel.grid = element_blank(), plot.title = element_text(size = 14),
+        axis.title = element_blank(), legend.title = element_text(size = 14),
+        axis.text = element_blank(), legend.text = element_text(size = 12),
         axis.ticks = element_blank(), legend.position = 'none') +
   labs(title = paste0(worst_month, '-15-2019'))
 dev.off()
@@ -185,10 +156,39 @@ KS_cities_df <- KS_cities_df[KS_cities_df$JULIAN_DAY == unique(KS_cities_df$JULI
 
 KS_pred_df <- rbind(KS_grid_df, KS_cities_df)
 
-png('5.png', height = 2, width = 2, units = 'in', res = 300)
+fld <- with(KS_pred_df, interp(x = BEGIN_LON, y = BEGIN_LAT, z = DAMAGE_PROPERTY, duplicate = TRUE))
 
+df <- melt(fld$z, na.rm = TRUE)
+names(df) <- c("x", "y", "dam")
+df$Lon <- fld$x[df$x]
+df$Lat <- fld$y[df$y]
+png('2.png', height = 4, width = 4, units = 'in', res = 300)
 ggplot(data = KS) + 
-  geom_polygon(aes(x = long, y = lat, group = group), color = "cyan", fill = 'NA', lwd = 0.5) +
+  coord_quickmap() +
+  geom_tile(data = df, aes(x = Lon, y = Lat, fill = dam), alpha = 0.2) +
+  geom_polygon(aes(x = long, y = lat, group = group), color = "grey50", fill = 'NA', lwd = 1) +
+  viridis::scale_fill_viridis('Conditional property\ndamage', limit = c(0, 250000), na.value = 'black',
+                              breaks = c(#100000,
+                                200000,
+                                #300000,
+                                400000,
+                                #500000,
+                                600000,
+                                #700000,
+                                800000,
+                                #900000,
+                                1000000),
+                              labels = c(#'$100,000',
+                                '$200,000',
+                                #'$300,000',
+                                '$400,000',
+                                #'$500,000',
+                                '$600,000',
+                                #'$700,000',
+                                '$800,000',
+                                #'$900,000',
+                                '$1,000,000'),
+                              direction = -1, option = 'B') +
   viridis::scale_color_viridis('Conditional property\ndamage', limit = c(0, 250000), na.value = 'black',
                                breaks = c(#100000,
                                  200000,
@@ -222,60 +222,30 @@ ggplot(data = KS) +
                                       color = DAMAGE_PROPERTY),
              size = 6, pch = 22, stroke = 1.5) +
   theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
-        axis.ticks = element_blank(), legend.position = 'none') +
-  labs(title = paste0('Kansas, ', worst_month, '-15-2019'))
-dev.off()
-
-fld <- with(KS_pred_df, interp(x = BEGIN_LON, y = BEGIN_LAT, z = DAMAGE_PROPERTY, duplicate = TRUE))
-
-df <- melt(fld$z, na.rm = TRUE)
-names(df) <- c("x", "y", "dam")
-df$Lon <- fld$x[df$x]
-df$Lat <- fld$y[df$y]
-png('6.png', height = 2, width = 2, units = 'in', res = 300)
-
-ggplot(data = KS) + 
-  coord_quickmap() +
-  geom_tile(data = df, aes(x = Lon, y = Lat, fill = dam)) +
-  geom_polygon(aes(x = long, y = lat, group = group), color = "black", fill = 'NA', lwd = 1) +
-  viridis::scale_fill_viridis('Conditional property\ndamage', limit = c(0, 250000), na.value = 'black',
-                              breaks = c(#100000,
-                                200000,
-                                #300000,
-                                400000,
-                                #500000,
-                                600000,
-                                #700000,
-                                800000,
-                                #900000,
-                                1000000),
-                              labels = c(#'$100,000',
-                                '$200,000',
-                                #'$300,000',
-                                '$400,000',
-                                #'$500,000',
-                                '$600,000',
-                                #'$700,000',
-                                '$800,000',
-                                #'$900,000',
-                                '$1,000,000'),
-                              direction = -1, option = 'B') +
-  theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
+  theme(panel.grid = element_blank(), plot.title = element_text(size = 14),
+        axis.title = element_blank(), legend.title = element_text(size = 14),
+        axis.text = element_blank(), legend.text = element_text(size = 12),
         axis.ticks = element_blank(), legend.position = 'none') +
   xlim(min(KS$long) - 1, max(KS$long) + 1) +
   ylim(min(KS$lat) - 1, max(KS$lat) + 1) +
   labs(title = paste0('Kansas, ', worst_month, '-15-2019'))
 dev.off()
 
-png('7.png', height = 2, width = 2, units = 'in', res = 300)
+
+fld <- with(KS_pred_df, interp(x = BEGIN_LON, y = BEGIN_LAT, z = DAMAGE_PROB, duplicate = TRUE))
+
+df <- melt(fld$z, na.rm = TRUE)
+names(df) <- c("x", "y", "dam")
+df$Lon <- fld$x[df$x]
+df$Lat <- fld$y[df$y]
+png('4.png', height = 4, width = 4, units = 'in', res = 300)
+
 ggplot(data = KS) + 
-  geom_polygon(aes(x = long, y = lat, group = group), color = "cyan", fill = 'NA', lwd = 0.5) +
+  coord_quickmap() +
+  geom_tile(data = df, aes(x = Lon, y = Lat, fill = dam), alpha = 0.2) +
+  geom_polygon(aes(x = long, y = lat, group = group), color = "grey50", fill = 'NA', lwd = 1) +
+  viridis::scale_fill_viridis('Probability\nof damage', direction = -1, option = 'B',
+                              limit = c(-0.01, 1.01)) +
   viridis::scale_color_viridis('Probability\nof damage', direction = -1, option = 'B',
                                limit = c(-0.01, 1.01)) + 
   coord_quickmap() +
@@ -289,31 +259,9 @@ ggplot(data = KS) +
                                       color = DAMAGE_PROB),
              size = 6, pch = 22, stroke = 1.5) +
   theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
-        axis.ticks = element_blank(), legend.position = 'none') +
-  labs(title = paste0('Kansas, ', worst_month, '-15-2019'))
-dev.off()
-
-fld <- with(KS_pred_df, interp(x = BEGIN_LON, y = BEGIN_LAT, z = DAMAGE_PROB, duplicate = TRUE))
-
-df <- melt(fld$z, na.rm = TRUE)
-names(df) <- c("x", "y", "dam")
-df$Lon <- fld$x[df$x]
-df$Lat <- fld$y[df$y]
-png('8.png', height = 2, width = 2, units = 'in', res = 300)
-
-ggplot(data = KS) + 
-  coord_quickmap() +
-  geom_tile(data = df, aes(x = Lon, y = Lat, fill = dam)) +
-  geom_polygon(aes(x = long, y = lat, group = group), color = "white", fill = 'NA', lwd = 1) +
-  viridis::scale_fill_viridis('Probability\nof damage', direction = -1, option = 'B',
-                              limit = c(-0.01, 1.01)) +
-  theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
+  theme(panel.grid = element_blank(), plot.title = element_text(size = 14),
+        axis.title = element_blank(), legend.title = element_text(size = 14),
+        axis.text = element_blank(), legend.text = element_text(size = 12),
         axis.ticks = element_blank(), legend.position = 'none') +
   xlim(min(KS$long) - 1, max(KS$long) + 1) +
   ylim(min(KS$lat) - 1, max(KS$lat) + 1) +
@@ -352,9 +300,40 @@ IL_cities_df <- IL_cities_df[IL_cities_df$JULIAN_DAY == unique(IL_cities_df$JULI
 
 IL_pred_df <- rbind(IL_grid_df, IL_cities_df)
 
-png('9.png', height = 2, width = 2, units = 'in', res = 300)
+fld <- with(IL_pred_df, interp(x = BEGIN_LON, y = BEGIN_LAT, z = DAMAGE_PROPERTY, duplicate = TRUE))
+
+df <- melt(fld$z, na.rm = TRUE)
+names(df) <- c("x", "y", "dam")
+df$Lon <- fld$x[df$x]
+df$Lat <- fld$y[df$y]
+png('5.png', height = 4, width = 4, units = 'in', res = 300)
+
 ggplot(data = IL) + 
-  geom_polygon(aes(x = long, y = lat, group = group), color = "cyan", fill = 'NA', lwd = 0.5) +
+  coord_quickmap() +
+  geom_tile(data = df, aes(x = Lon, y = Lat, fill = dam), alpha = 0.2) +
+  geom_polygon(aes(x = long, y = lat, group = group), color = "grey50", fill = 'NA', lwd = 1) +
+  viridis::scale_fill_viridis('Conditional property\ndamage', limit = c(0, 250000), na.value = 'black',
+                              breaks = c(#100000,
+                                200000,
+                                #300000,
+                                400000,
+                                #500000,
+                                600000,
+                                #700000,
+                                800000,
+                                #900000,
+                                1000000),
+                              labels = c(#'$100,000',
+                                '$200,000',
+                                #'$300,000',
+                                '$400,000',
+                                #'$500,000',
+                                '$600,000',
+                                #'$700,000',
+                                '$800,000',
+                                #'$900,000',
+                                '$1,000,000'),
+                              direction = -1, option = 'B')+
   viridis::scale_color_viridis('Conditional property\ndamage', limit = c(0, 250000), na.value = 'black',
                                breaks = c(#100000,
                                  200000,
@@ -388,60 +367,29 @@ ggplot(data = IL) +
                                       color = DAMAGE_PROPERTY),
              size = 6, pch = 22, stroke = 1.5) +
   theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
-        axis.ticks = element_blank(), legend.position = 'none') +
-  labs(title = paste0('Illinois, ', worst_month, '-15-2019'))
-dev.off()
-
-fld <- with(IL_pred_df, interp(x = BEGIN_LON, y = BEGIN_LAT, z = DAMAGE_PROPERTY, duplicate = TRUE))
-
-df <- melt(fld$z, na.rm = TRUE)
-names(df) <- c("x", "y", "dam")
-df$Lon <- fld$x[df$x]
-df$Lat <- fld$y[df$y]
-png('10.png', height = 2, width = 2, units = 'in', res = 300)
-
-ggplot(data = IL) + 
-  coord_quickmap() +
-  geom_tile(data = df, aes(x = Lon, y = Lat, fill = dam)) +
-  geom_polygon(aes(x = long, y = lat, group = group), color = "black", fill = 'NA', lwd = 1) +
-  viridis::scale_fill_viridis('Conditional property\ndamage', limit = c(0, 250000), na.value = 'black',
-                              breaks = c(#100000,
-                                200000,
-                                #300000,
-                                400000,
-                                #500000,
-                                600000,
-                                #700000,
-                                800000,
-                                #900000,
-                                1000000),
-                              labels = c(#'$100,000',
-                                '$200,000',
-                                #'$300,000',
-                                '$400,000',
-                                #'$500,000',
-                                '$600,000',
-                                #'$700,000',
-                                '$800,000',
-                                #'$900,000',
-                                '$1,000,000'),
-                              direction = -1, option = 'B')+
-  theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
+  theme(panel.grid = element_blank(), plot.title = element_text(size = 14),
+        axis.title = element_blank(), legend.title = element_text(size = 14),
+        axis.text = element_blank(), legend.text = element_text(size = 12),
         axis.ticks = element_blank(), legend.position = 'none') +
   xlim(min(IL$long) - 1, max(IL$long) + 1) +
   ylim(min(IL$lat) - 1, max(IL$lat) + 1) +
   labs(title = paste0('Illinois, ', worst_month, '-15-2019'))
 dev.off()
 
-png('11.png', height = 2, width = 2, units = 'in', res = 300)
+
+fld <- with(IL_pred_df, interp(x = BEGIN_LON, y = BEGIN_LAT, z = DAMAGE_PROB, duplicate = TRUE))
+
+df <- melt(fld$z, na.rm = TRUE)
+names(df) <- c("x", "y", "dam")
+df$Lon <- fld$x[df$x]
+df$Lat <- fld$y[df$y]
+png('7.png', height = 4, width = 4, units = 'in', res = 300)
 ggplot(data = IL) + 
-  geom_polygon(aes(x = long, y = lat, group = group), color = "cyan", fill = 'NA', lwd = 0.5) +
+  coord_quickmap() +
+  geom_tile(data = df, aes(x = Lon, y = Lat, fill = dam), alpha = 0.2) +
+  geom_polygon(aes(x = long, y = lat, group = group), color = "grey50", fill = 'NA', lwd = 1) +
+  viridis::scale_fill_viridis('Probability\nof damage', direction = -1, option = 'B',
+                              limit = c(-0.01, 1.01)) +
   viridis::scale_color_viridis('Probability\nof damage', direction = -1, option = 'B',
                                limit = c(-0.01, 1.01)) + 
   coord_quickmap() +
@@ -455,31 +403,9 @@ ggplot(data = IL) +
                                       color = DAMAGE_PROB),
              size = 6, pch = 22, stroke = 1.5) +
   theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
-        axis.ticks = element_blank(), legend.position = 'none') +
-  labs(title = paste0('Illinois, ', worst_month, '-15-2019'))
-dev.off()
-
-fld <- with(IL_pred_df, interp(x = BEGIN_LON, y = BEGIN_LAT, z = DAMAGE_PROB, duplicate = TRUE))
-
-df <- melt(fld$z, na.rm = TRUE)
-names(df) <- c("x", "y", "dam")
-df$Lon <- fld$x[df$x]
-df$Lat <- fld$y[df$y]
-png('12.png', height = 2, width = 2, units = 'in', res = 300)
-
-ggplot(data = IL) + 
-  coord_quickmap() +
-  geom_tile(data = df, aes(x = Lon, y = Lat, fill = dam)) +
-  geom_polygon(aes(x = long, y = lat, group = group), color = "white", fill = 'NA', lwd = 1) +
-  viridis::scale_fill_viridis('Probability\nof damage', direction = -1, option = 'B',
-                              limit = c(-0.01, 1.01)) +
-  theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
+  theme(panel.grid = element_blank(), plot.title = element_text(size = 14),
+        axis.title = element_blank(), legend.title = element_text(size = 14),
+        axis.text = element_blank(), legend.text = element_text(size = 12),
         axis.ticks = element_blank(), legend.position = 'none') +
   xlim(min(IL$long) - 1, max(IL$long) + 1) +
   ylim(min(IL$lat) - 1, max(IL$lat) + 1) +
@@ -518,10 +444,42 @@ AL_cities_df <- AL_cities_df[AL_cities_df$JULIAN_DAY == unique(AL_cities_df$JULI
 
 AL_pred_df <- rbind(AL_grid_df, AL_cities_df)
 
-png('13.png', height = 2, width = 2, units = 'in', res = 300)
+
+
+fld <- with(AL_pred_df, interp(x = BEGIN_LON, y = BEGIN_LAT, z = DAMAGE_PROPERTY, duplicate = TRUE))
+
+df <- melt(fld$z, na.rm = TRUE)
+names(df) <- c("x", "y", "dam")
+df$Lon <- fld$x[df$x]
+df$Lat <- fld$y[df$y]
+png('6.png', height = 4, width = 4, units = 'in', res = 300)
 
 ggplot(data = AL) + 
-  geom_polygon(aes(x = long, y = lat, group = group), color = "cyan", fill = 'NA', lwd = 0.5) +
+  coord_quickmap() +
+  geom_tile(data = df, aes(x = Lon, y = Lat, fill = dam), alpha = 0.2) +
+  geom_polygon(aes(x = long, y = lat, group = group), color = "grey50", fill = 'NA', lwd = 1) +
+  viridis::scale_fill_viridis('Conditional property\ndamage', limit = c(0, 250000), na.value = 'black',
+                              breaks = c(#100000,
+                                200000,
+                                #300000,
+                                400000,
+                                #500000,
+                                600000,
+                                #700000,
+                                800000,
+                                #900000,
+                                1000000),
+                              labels = c(#'$100,000',
+                                '$200,000',
+                                #'$300,000',
+                                '$400,000',
+                                #'$500,000',
+                                '$600,000',
+                                #'$700,000',
+                                '$800,000',
+                                #'$900,000',
+                                '$1,000,000'),
+                              direction = -1, option = 'B')+
   viridis::scale_color_viridis('Conditional property\ndamage', limit = c(0, 250000), na.value = 'black',
                                breaks = c(#100000,
                                  200000,
@@ -555,61 +513,30 @@ ggplot(data = AL) +
                                       color = DAMAGE_PROPERTY),
              size = 6, pch = 22, stroke = 1.5) +
   theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
-        axis.ticks = element_blank(), legend.position = 'none') +
-  labs(title = paste0('Alabama, ', worst_month, '-15-2019'))
-dev.off()
-
-fld <- with(AL_pred_df, interp(x = BEGIN_LON, y = BEGIN_LAT, z = DAMAGE_PROPERTY, duplicate = TRUE))
-
-df <- melt(fld$z, na.rm = TRUE)
-names(df) <- c("x", "y", "dam")
-df$Lon <- fld$x[df$x]
-df$Lat <- fld$y[df$y]
-png('14.png', height = 2, width = 2, units = 'in', res = 300)
-
-ggplot(data = AL) + 
-  coord_quickmap() +
-  geom_tile(data = df, aes(x = Lon, y = Lat, fill = dam)) +
-  geom_polygon(aes(x = long, y = lat, group = group), color = "black", fill = 'NA', lwd = 1) +
-  viridis::scale_fill_viridis('Conditional property\ndamage', limit = c(0, 250000), na.value = 'black',
-                              breaks = c(#100000,
-                                200000,
-                                #300000,
-                                400000,
-                                #500000,
-                                600000,
-                                #700000,
-                                800000,
-                                #900000,
-                                1000000),
-                              labels = c(#'$100,000',
-                                '$200,000',
-                                #'$300,000',
-                                '$400,000',
-                                #'$500,000',
-                                '$600,000',
-                                #'$700,000',
-                                '$800,000',
-                                #'$900,000',
-                                '$1,000,000'),
-                              direction = -1, option = 'B')+
-  theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
+  theme(panel.grid = element_blank(), plot.title = element_text(size = 14),
+        axis.title = element_blank(), legend.title = element_text(size = 14),
+        axis.text = element_blank(), legend.text = element_text(size = 12),
         axis.ticks = element_blank(), legend.position = 'none') +
   xlim(min(AL$long) - 1, max(AL$long) + 1) +
   ylim(min(AL$lat) - 1, max(AL$lat) + 1) +
   labs(title = paste0('Alabama, ', worst_month, '-15-2019'))
 dev.off()
 
-png('15.png', height = 2, width = 2, units = 'in', res = 300)
 
+
+fld <- with(AL_pred_df, interp(x = BEGIN_LON, y = BEGIN_LAT, z = DAMAGE_PROB, duplicate = TRUE))
+
+df <- melt(fld$z, na.rm = TRUE)
+names(df) <- c("x", "y", "dam")
+df$Lon <- fld$x[df$x]
+df$Lat <- fld$y[df$y]
+png('8.png', height = 4, width = 4, units = 'in', res = 300)
 ggplot(data = AL) + 
-  geom_polygon(aes(x = long, y = lat, group = group), color = "cyan", fill = 'NA', lwd = 0.5) +
+  coord_quickmap() +
+  geom_tile(data = df, aes(x = Lon, y = Lat, fill = dam), alpha = 0.2) +
+  geom_polygon(aes(x = long, y = lat, group = group), color = "grey50", fill = 'NA', lwd = 1) +
+  viridis::scale_fill_viridis('Probability\nof damage', direction = -1, option = 'B',
+                              limit = c(-0.01, 1.01)) +
   viridis::scale_color_viridis('Probability\nof damage', direction = -1, option = 'B',
                                limit = c(-0.01, 1.01)) + 
   coord_quickmap() +
@@ -623,31 +550,9 @@ ggplot(data = AL) +
                                       color = DAMAGE_PROB),
              size = 6, pch = 22, stroke = 1.5) +
   theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
-        axis.ticks = element_blank(), legend.position = 'none') +
-  labs(title = paste0('Alabama, ', worst_month, '-15-2019'))
-dev.off()
-
-fld <- with(AL_pred_df, interp(x = BEGIN_LON, y = BEGIN_LAT, z = DAMAGE_PROB, duplicate = TRUE))
-
-df <- melt(fld$z, na.rm = TRUE)
-names(df) <- c("x", "y", "dam")
-df$Lon <- fld$x[df$x]
-df$Lat <- fld$y[df$y]
-png('16.png', height = 2, width = 2, units = 'in', res = 300)
-
-ggplot(data = AL) + 
-  coord_quickmap() +
-  geom_tile(data = df, aes(x = Lon, y = Lat, fill = dam)) +
-  geom_polygon(aes(x = long, y = lat, group = group), color = "white", fill = 'NA', lwd = 1) +
-  viridis::scale_fill_viridis('Probability\nof damage', direction = -1, option = 'B',
-                              limit = c(-0.01, 1.01)) +
-  theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
+  theme(panel.grid = element_blank(), plot.title = element_text(size = 14),
+        axis.title = element_blank(), legend.title = element_text(size = 14),
+        axis.text = element_blank(), legend.text = element_text(size = 12),
         axis.ticks = element_blank(), legend.position = 'none') +
   xlim(min(AL$long) - 1, max(AL$long) + 1) +
   ylim(min(AL$lat) - 1, max(AL$lat) + 1) +
@@ -659,33 +564,6 @@ round(mean(AL_pred_df$DAMAGE_PROPERTY))
 round(max(AL_pred_df$DAMAGE_PROPERTY))
 
 mean(AL_pred_df$DAMAGE_PROB)
-
-png('1.png', height = 1, width = 2, units = 'in', res = 300)
-ggplot(data = AL) + 
-  coord_quickmap() +
-  geom_tile(data = df, aes(x = Lon, y = Lat, fill = dam)) +
-  geom_polygon(aes(x = long, y = lat, group = group), color = "white", fill = 'NA', lwd = 1) +
-  viridis::scale_fill_viridis('Probability\nof damage', direction = -1, option = 'B',
-                              limit = c(-0.01, 1.01), alpha = 0.33) +
-  geom_point(data = AL_grid_df, aes(x = BEGIN_LON,
-                                    y = BEGIN_LAT,
-                                    color = DAMAGE_PROB),
-             size = 2.5) +
-  geom_point(data = AL_cities_df, aes(x = BEGIN_LON,
-                                      y = BEGIN_LAT,
-                                      color = DAMAGE_PROB),
-             size = 6, pch = 22, stroke = 1.5) +
-  viridis::scale_color_viridis('Probability\nof damage', direction = -1, option = 'B',
-                               limit = c(-0.01, 1.01)) +
-  theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
-        axis.ticks = element_blank(), legend.position = 'none') +
-  xlim(min(AL$long) - 1, max(AL$long) + 1) +
-  ylim(min(AL$lat) - 1, max(AL$lat) + 1) +
-  labs(title = paste0('Florida, ', worst_month, '-15-2019'))
-dev.off()
 
 OK <- subset(states, region %in% c("oklahoma"))
 
@@ -713,10 +591,42 @@ OK_cities_df <- OK_cities_df[OK_cities_df$JULIAN_DAY == unique(OK_cities_df$JULI
 
 OK_pred_df <- rbind(OK_grid_df, OK_cities_df)
 
-png('17.png', height = 2, width = 2, units = 'in', res = 300)
+fld <- with(OK_pred_df, interp(x = BEGIN_LON, y = BEGIN_LAT, z = DAMAGE_PROPERTY, duplicate = TRUE))
 
+df <- melt(fld$z, na.rm = TRUE)
+names(df) <- c("x", "y", "dam")
+df$Lon <- fld$x[df$x]
+df$Lat <- fld$y[df$y]
+png('9.png', height = 4, width = 4, units = 'in', res = 300)
 ggplot(data = OK) + 
-  geom_polygon(aes(x = long, y = lat, group = group), color = "cyan", fill = 'NA', lwd = 0.5) +
+  coord_quickmap() +
+  geom_tile(data = df, aes(x = Lon, y = Lat, fill = dam), alpha = 0.2) +
+  geom_polygon(aes(x = long, y = lat, group = group), color = "grey50", fill = 'NA', lwd = 1) +
+  viridis::scale_fill_viridis('Conditional property\ndamage', limit = c(0, 250000), na.value = 'black',
+                              breaks = c(#100000,
+                                0, 200000,
+                                #300000,
+                                400000,
+                                #500000,
+                                600000,
+                                #700000,
+                                800000,
+                                #900000,
+                                1000000,
+                                1200000, 1400000),
+                              labels = c(#'$100,000',
+                                '$0',
+                                '$200,000',
+                                #'$300,000',
+                                '$400,000',
+                                #'$500,000',
+                                '$600,000',
+                                #'$700,000',
+                                '$800,000',
+                                #'$900,000',
+                                '$1,000,000',
+                                '$1,200,000', '$1,400,000'),
+                              direction = -1, option = 'B') +
   viridis::scale_color_viridis('Conditional property\ndamage', limit = c(0, 250000), na.value = 'black',
                                breaks = c(#100000,
                                  0, 200000,
@@ -753,62 +663,28 @@ ggplot(data = OK) +
                                       color = DAMAGE_PROPERTY),
              size = 6, pch = 22, stroke = 1.5) +
   theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
-        axis.ticks = element_blank(), legend.position = 'none') +
-  labs(title = paste0('Oklahoma, ', worst_month, '-15-2019'))
-dev.off()
-
-fld <- with(OK_pred_df, interp(x = BEGIN_LON, y = BEGIN_LAT, z = DAMAGE_PROPERTY, duplicate = TRUE))
-
-df <- melt(fld$z, na.rm = TRUE)
-names(df) <- c("x", "y", "dam")
-df$Lon <- fld$x[df$x]
-df$Lat <- fld$y[df$y]
-png('18.png', height = 2, width = 2, units = 'in', res = 300)
-ggplot(data = OK) + 
-  coord_quickmap() +
-  geom_tile(data = df, aes(x = Lon, y = Lat, fill = dam)) +
-  geom_polygon(aes(x = long, y = lat, group = group), color = "black", fill = 'NA', lwd = 1) +
-  viridis::scale_fill_viridis('Conditional property\ndamage', limit = c(0, 250000), na.value = 'black',
-                              breaks = c(#100000,
-                                0, 200000,
-                                #300000,
-                                400000,
-                                #500000,
-                                600000,
-                                #700000,
-                                800000,
-                                #900000,
-                                1000000,
-                                1200000, 1400000),
-                              labels = c(#'$100,000',
-                                '$0',
-                                '$200,000',
-                                #'$300,000',
-                                '$400,000',
-                                #'$500,000',
-                                '$600,000',
-                                #'$700,000',
-                                '$800,000',
-                                #'$900,000',
-                                '$1,000,000',
-                                '$1,200,000', '$1,400,000'),
-                              direction = -1, option = 'B') +
-  theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
+  theme(panel.grid = element_blank(), plot.title = element_text(size = 14),
+        axis.title = element_blank(), legend.title = element_text(size = 14),
+        axis.text = element_blank(), legend.text = element_text(size = 12),
         axis.ticks = element_blank(), legend.position = 'none') +
   xlim(min(OK$long) - 1, max(OK$long) + 1) +
   ylim(min(OK$lat) - 1, max(OK$lat) + 1) +
   labs(title = paste0('Oklahoma, ', worst_month, '-15-2019'))
 dev.off()
 
-png('19.png', height = 2, width = 2, units = 'in', res = 300)
+fld <- with(OK_pred_df, interp(x = BEGIN_LON, y = BEGIN_LAT, z = DAMAGE_PROB, duplicate = TRUE))
+
+df <- melt(fld$z, na.rm = TRUE)
+names(df) <- c("x", "y", "dam")
+df$Lon <- fld$x[df$x]
+df$Lat <- fld$y[df$y]
+png('11.png', height = 4, width = 4, units = 'in', res = 300)
 ggplot(data = OK) + 
-  geom_polygon(aes(x = long, y = lat, group = group), color = "cyan", fill = 'NA', lwd = 0.5) +
+  coord_quickmap() +
+  geom_tile(data = df, aes(x = Lon, y = Lat, fill = dam), alpha = 0.2) +
+  geom_polygon(aes(x = long, y = lat, group = group), color = "grey50", fill = 'NA', lwd = 1) +
+  viridis::scale_fill_viridis('Probability\nof damage', direction = -1, option = 'B',
+                              limit = c(-0.01, 1.01)) +
   viridis::scale_color_viridis('Probability\nof damage', direction = -1, option = 'B',
                                limit = c(-0.01, 1.01)) + 
   coord_quickmap() +
@@ -822,30 +698,9 @@ ggplot(data = OK) +
                                       color = DAMAGE_PROB),
              size = 6, pch = 22, stroke = 1.5) +
   theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
-        axis.ticks = element_blank(), legend.position = 'none') +
-  labs(title = paste0('Oklahoma, ', worst_month, '-15-2019'))
-dev.off()
-
-fld <- with(OK_pred_df, interp(x = BEGIN_LON, y = BEGIN_LAT, z = DAMAGE_PROB, duplicate = TRUE))
-
-df <- melt(fld$z, na.rm = TRUE)
-names(df) <- c("x", "y", "dam")
-df$Lon <- fld$x[df$x]
-df$Lat <- fld$y[df$y]
-png('20.png', height = 2, width = 2, units = 'in', res = 300)
-ggplot(data = OK) + 
-  coord_quickmap() +
-  geom_tile(data = df, aes(x = Lon, y = Lat, fill = dam)) +
-  geom_polygon(aes(x = long, y = lat, group = group), color = "white", fill = 'NA', lwd = 1) +
-  viridis::scale_fill_viridis('Probability\nof damage', direction = -1, option = 'B',
-                              limit = c(-0.01, 1.01)) +
-  theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
+  theme(panel.grid = element_blank(), plot.title = element_text(size = 14),
+        axis.title = element_blank(), legend.title = element_text(size = 14),
+        axis.text = element_blank(), legend.text = element_text(size = 12),
         axis.ticks = element_blank(), legend.position = 'none') +
   xlim(min(OK$long) - 1, max(OK$long) + 1) +
   ylim(min(OK$lat) - 1, max(OK$lat) + 1) +
@@ -884,9 +739,39 @@ FL_cities_df <- FL_cities_df[FL_cities_df$JULIAN_DAY == unique(FL_cities_df$JULI
 
 FL_pred_df <- rbind(FL_grid_df, FL_cities_df)
 
-png('21.png', height = 2, width = 2, units = 'in', res = 300)
+fld <- with(FL_pred_df, interp(x = BEGIN_LON, y = BEGIN_LAT, z = DAMAGE_PROPERTY, duplicate = TRUE))
+
+df <- melt(fld$z, na.rm = TRUE)
+names(df) <- c("x", "y", "dam")
+df$Lon <- fld$x[df$x]
+df$Lat <- fld$y[df$y]
+png('10.png', height = 4, width = 4, units = 'in', res = 300)
 ggplot(data = FL) + 
-  geom_polygon(aes(x = long, y = lat, group = group), color = "cyan", fill = 'NA', lwd = 0.5) +
+  coord_quickmap() +
+  geom_tile(data = df, aes(x = Lon, y = Lat, fill = dam), alpha = 0.2) +
+  geom_polygon(aes(x = long, y = lat, group = group), color = "grey50", fill = 'NA', lwd = 1) +
+  viridis::scale_fill_viridis('Conditional property\ndamage', limit = c(0, 250000), na.value = 'black',
+                              breaks = c(#100000,
+                                200000,
+                                #300000,
+                                400000,
+                                #500000,
+                                600000,
+                                #700000,
+                                800000,
+                                #900000,
+                                1000000),
+                              labels = c(#'$100,000',
+                                '$200,000',
+                                #'$300,000',
+                                '$400,000',
+                                #'$500,000',
+                                '$600,000',
+                                #'$700,000',
+                                '$800,000',
+                                #'$900,000',
+                                '$1,000,000'),
+                              direction = -1, option = 'B') +
   viridis::scale_color_viridis('Conditional property\ndamage', limit = c(0, 250000), na.value = 'black',
                                breaks = c(#100000,
                                  200000,
@@ -920,59 +805,28 @@ ggplot(data = FL) +
                                       color = DAMAGE_PROPERTY),
              size = 6, pch = 22, stroke = 1.5) +
   theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
-        axis.ticks = element_blank(), legend.position = 'none') +
-  labs(title = paste0('Florida, ', worst_month, '-15-2019'))
-dev.off()
-
-fld <- with(FL_pred_df, interp(x = BEGIN_LON, y = BEGIN_LAT, z = DAMAGE_PROPERTY, duplicate = TRUE))
-
-df <- melt(fld$z, na.rm = TRUE)
-names(df) <- c("x", "y", "dam")
-df$Lon <- fld$x[df$x]
-df$Lat <- fld$y[df$y]
-png('22.png', height = 2, width = 2, units = 'in', res = 300)
-ggplot(data = FL) + 
-  coord_quickmap() +
-  geom_tile(data = df, aes(x = Lon, y = Lat, fill = dam)) +
-  geom_polygon(aes(x = long, y = lat, group = group), color = "black", fill = 'NA', lwd = 1) +
-  viridis::scale_fill_viridis('Conditional property\ndamage', limit = c(0, 250000), na.value = 'black',
-                              breaks = c(#100000,
-                                200000,
-                                #300000,
-                                400000,
-                                #500000,
-                                600000,
-                                #700000,
-                                800000,
-                                #900000,
-                                1000000),
-                              labels = c(#'$100,000',
-                                '$200,000',
-                                #'$300,000',
-                                '$400,000',
-                                #'$500,000',
-                                '$600,000',
-                                #'$700,000',
-                                '$800,000',
-                                #'$900,000',
-                                '$1,000,000'),
-                              direction = -1, option = 'B') +
-  theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
+  theme(panel.grid = element_blank(), plot.title = element_text(size = 14),
+        axis.title = element_blank(), legend.title = element_text(size = 14),
+        axis.text = element_blank(), legend.text = element_text(size = 12),
         axis.ticks = element_blank(), legend.position = 'none') +
   xlim(min(FL$long) - 1, max(FL$long) + 1) +
   ylim(min(FL$lat) - 1, max(FL$lat) + 1) +
   labs(title = paste0('Florida, ', worst_month, '-15-2019'))
 dev.off()
 
-png('23.png', height = 2, width = 2, units = 'in', res = 300)
+fld <- with(FL_pred_df, interp(x = BEGIN_LON, y = BEGIN_LAT, z = DAMAGE_PROB, duplicate = TRUE))
+
+df <- melt(fld$z, na.rm = TRUE)
+names(df) <- c("x", "y", "dam")
+df$Lon <- fld$x[df$x]
+df$Lat <- fld$y[df$y]
+png('12.png', height = 4, width = 4, units = 'in', res = 300)
 ggplot(data = FL) + 
-  geom_polygon(aes(x = long, y = lat, group = group), color = "cyan", fill = 'NA', lwd = 0.5) +
+  coord_quickmap() +
+  geom_tile(data = df, aes(x = Lon, y = Lat, fill = dam), alpha = 0.2) +
+  geom_polygon(aes(x = long, y = lat, group = group), color = "grey50", fill = 'NA', lwd = 1) +
+  viridis::scale_fill_viridis('Probability\nof damage', direction = -1, option = 'B',
+                              limit = c(-0.01, 1.01)) +
   viridis::scale_color_viridis('Probability\nof damage', direction = -1, option = 'B',
                                limit = c(-0.01, 1.01)) + 
   coord_quickmap() +
@@ -986,30 +840,9 @@ ggplot(data = FL) +
                                       color = DAMAGE_PROB),
              size = 6, pch = 22, stroke = 1.5) +
   theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
-        axis.ticks = element_blank(), legend.position = 'none') +
-  labs(title = paste0('Florida, ', worst_month, '-15-2019'))
-dev.off()
-
-fld <- with(FL_pred_df, interp(x = BEGIN_LON, y = BEGIN_LAT, z = DAMAGE_PROB, duplicate = TRUE))
-
-df <- melt(fld$z, na.rm = TRUE)
-names(df) <- c("x", "y", "dam")
-df$Lon <- fld$x[df$x]
-df$Lat <- fld$y[df$y]
-png('24.png', height = 2, width = 2, units = 'in', res = 300)
-ggplot(data = FL) + 
-  coord_quickmap() +
-  geom_tile(data = df, aes(x = Lon, y = Lat, fill = dam)) +
-  geom_polygon(aes(x = long, y = lat, group = group), color = "white", fill = 'NA', lwd = 1) +
-  viridis::scale_fill_viridis('Probability\nof damage', direction = -1, option = 'B',
-                              limit = c(-0.01, 1.01))+
-  theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
+  theme(panel.grid = element_blank(), plot.title = element_text(size = 14),
+        axis.title = element_blank(), legend.title = element_text(size = 14),
+        axis.text = element_blank(), legend.text = element_text(size = 12),
         axis.ticks = element_blank(), legend.position = 'none') +
   xlim(min(FL$long) - 1, max(FL$long) + 1) +
   ylim(min(FL$lat) - 1, max(FL$lat) + 1) +
@@ -1022,9 +855,10 @@ round(max(FL_pred_df$DAMAGE_PROPERTY))
 mean(FL_pred_df$DAMAGE_PROB)
 
 
+png('legend1.png', height = 4, width = 8, units = 'in', res = 300)
 ggplot(data = FL) + 
   geom_polygon(aes(x = long, y = lat, group = group), alpha = 0, color = "white", fill = 'NA', lwd = 0.5) +
-  viridis::scale_color_viridis('Conditional\nproperty\ndamage', limit = c(cmin - 1, cmax),
+  viridis::scale_color_viridis('Conditional\nproperty\ndamage\n\n', limit = c(cmin - 1, cmax),
                                direction = -1, option = 'B',
                                breaks = c(cmin - 0.1, 50000,
                                           100000, 150000,
@@ -1043,17 +877,20 @@ ggplot(data = FL) +
                                       color = DAMAGE_PROPERTY),
              size = 6, pch = 22, stroke = 1.5, alpha = 0) +
   theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
+  theme(panel.grid = element_blank(), plot.title = element_text(size = 14),
+        axis.title = element_blank(), legend.title = element_text(size = 14),
+        axis.text = element_blank(), legend.text = element_text(size = 12),
         axis.ticks = element_blank(),
         legend.position = 'top',
-        legend.key.size = unit(1, 'in'))
+        legend.key.height = unit(0.5, 'in'),
+        legend.key.width = unit(1, 'in'))
+dev.off()
 
+png('legend2.png', height = 4, width = 8, units = 'in', res = 300)
 ggplot(data = FL) + 
   geom_polygon(aes(x = long, y = lat, group = group), alpha = 0, color = "white", fill = 'NA', lwd = 0.5) +
-  viridis::scale_color_viridis('Probability\nof damage', direction = -1, option = 'B',
-                               limit = c(-0.0001, 1.0001), na.value = 'black') + 
+  viridis::scale_color_viridis('Probability\nof damage\n\n', direction = -1, option = 'B',
+                               limit = c(-0.01, 1.01), na.value = 'black') + 
   coord_quickmap() +
   guides(fill = FALSE) +
   geom_point(data = FL_grid_df, aes(x = BEGIN_LON,
@@ -1065,37 +902,11 @@ ggplot(data = FL) +
                                       color = DAMAGE_PROB),
              size = 6, pch = 22, stroke = 1.5, alpha = 0) +
   theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
+  theme(panel.grid = element_blank(), plot.title = element_text(size = 14),
+        axis.title = element_blank(), legend.title = element_text(size = 14),
+        axis.text = element_blank(), legend.text = element_text(size = 12),
         axis.ticks = element_blank(), legend.position = 'top',
-        legend.key.size = unit(1, 'in'))
-
-png('2.png', height = 8, width = 8, units = 'in', res = 300)
-ggplot(data = FL) + 
-  coord_quickmap() +
-  geom_tile(data = df, aes(x = Lon, y = Lat, fill = dam)) +
-  geom_polygon(aes(x = long, y = lat, group = group), color = "white", fill = 'NA', lwd = 1) +
-  viridis::scale_fill_viridis('Probability\nof damage', direction = -1, option = 'B',
-                              limit = c(-0.01, 1.01), alpha = 0.33) +
-  geom_point(data = FL_grid_df, aes(x = BEGIN_LON,
-                                    y = BEGIN_LAT,
-                                    color = DAMAGE_PROB),
-             size = 2.5) +
-  geom_point(data = FL_cities_df, aes(x = BEGIN_LON,
-                                      y = BEGIN_LAT,
-                                      color = DAMAGE_PROB),
-             size = 6, pch = 22, stroke = 1.5) +
-  viridis::scale_color_viridis('Probability\nof damage', direction = -1, option = 'B',
-                               limit = c(-0.01, 1.01)) +
-  theme_minimal() +
-  theme(panel.grid = element_blank(), plot.title = element_text(size = 12),
-        axis.title = element_blank(),
-        axis.text = element_blank(),
-        axis.ticks = element_blank(), legend.position = 'none') +
-  xlim(min(FL$long) - 1, max(FL$long) + 1) +
-  ylim(min(FL$lat) - 1, max(FL$lat) + 1) +
-  labs(title = paste0('Florida, ', worst_month, '-15-2019'))
+        legend.key.height = unit(0.5, 'in'),
+        legend.key.width = unit(1, 'in'))
 dev.off()
-
 
